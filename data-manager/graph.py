@@ -1,24 +1,19 @@
-from collections import namedtuple
-import networkx as nx
-import matplotlib.pyplot as plt
+from pyvis.network import Network
+
 import db 
-import graph
 
-
-def show_directed_graph(urls: db.LinkData):
-    urls = [(link.referrer, link.url) for link in urls]
-    G = nx.DiGraph()
+def save_pyvis_link_graph(urls: db.LinkData):
+    urls = [(link.referrer, link.url) for link in urls[1:]]
+    G = Network()
+    if G is None:
+        raise ValueError("Failed to create Network object")
+    
     for referrer, url in urls:
+        if referrer == "STARTING_URL":
+            continue
+        G.add_node(referrer)
+        G.add_node(url)
         G.add_edge(referrer, url)
 
-    nx.draw(G, with_labels=True)
-    plt.show()
-
-def show_spring_layout_graph(urls: db.LinkData):
-    urls = [(link.referrer, link.url) for link in urls]
-    G = nx.DiGraph()
-    for referrer, url in urls:
-        G.add_edge(referrer, url)
-    pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True)
-    plt.show()
+    # Display the graph
+    G.save_graph("network.html")

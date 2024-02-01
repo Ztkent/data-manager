@@ -7,6 +7,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/data-manager/data_manager.py",
             "console": "integratedTerminal",
+            "args": [
+                "--database", "../crab-crawler/db/crawl_results.db"
+            ]
         }
     ]
 }

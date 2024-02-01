@@ -4,3 +4,5 @@ build
 DataManager.egg-info
 */__pycache__
 .pytest_cache
+*.html
+lib
