@@ -1,8 +1,10 @@
 crawl_results.db
 dev_env
 build
-DataManager.egg-info
-*/__pycache__
+DataProcessor.egg-info
+__pycache__
 .pytest_cache
-*.html
+html/network.html
 lib
+dist
+results.db

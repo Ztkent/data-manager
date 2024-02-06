@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <header class="bg-blue-500 p-4 flex justify-between items-center">
+        <h1 class="text-white">Welcome to Data Manager</h1>
+        <button class="bg-white text-blue-500 px-4 py-2 rounded">Login</button>
+    </header>
+    <main class="p-4 flex">
+        <div class="w-1/2 flex flex-col items-center">
+            <div class="flex items-center mb-4">
+                <form hx-post="/crawl" hx-target="#crawlContent">
+                    <input type="text" id="crawl" placeholder="https://www.example.com" class="px-4 py-2 border rounded" />
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl</button>
+                </form>
+            </div>
+            <div class="flex items-center">
+                <button hx-get="/network" hx-target="#networkContent" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Load Network Data</button>
+                <button hx-post="/export" hx-boost="true" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Export Crawl Data</button>
+            </div>
+        </div>
+        <div class="w-1/2 flex flex-col items-center space-y-4">
+            <div class="flex items-center mb-4">
+                <form hx-post="/upload" hx-target="#uploadStatus">
+                    <input type="file" id="dbFile" name="dbFile" accept=".sqlite,.db,.db3,.sqlite3" class="hidden" />
+                    <label for="dbFile" class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer">
+                        Select .sqlite DB
+                    </label>
+                </form>
+                <div id="uploadStatus" class="relative ml-4">No DB Selected</div>
+            </div>
+            <div>
+                <span class="mr-2">Crawl Options:</span>
+                <div class="flex space-x-4">
+                    <label>
+                        <input type="radio" name="testRadio" value="option1" class="mr-1" />
+                        Option 1
+                    </label>
+                    <label>
+                        <input type="radio" name="testRadio" value="option2" class="mr-1" />
+                        Option 2
+                    </label>
+                    <label>
+                        <input type="radio" name="testRadio" value="option3" class="mr-1" />
+                        Option 3
+                    </label>
+                </div>
+            </div>
+            <div>
+                <span class="mr-2">Dropdown:</span>
+                <select class="border px-2 py-1 rounded">
+                    <option value="option1">Option 1</option>
+                    <option value="option2">Option 2</option>
+                    <option value="option3">Option 3</option>
+                </select>
+            </div>
+        </div>
+    </main>
+    <div id="crawlContent" class="relative mt-4"></div>
+    <div id="networkContent" class="relative mt-4"></div>
+</body>
+</html>

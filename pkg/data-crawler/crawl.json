@@ -1,0 +1,8 @@
+{
+    "starting_url": "https://www.foxnews.com",
+    "max_urls_to_visit": 5,
+    "debug": true,
+    "free_crawl": true,
+    "crawler_request_delay_ms": 1000,
+    "sqlite_path": "pkg/data-crawler/results.db"
+}

@@ -2,14 +2,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Data Manager",
-            "type": "python",
+            "name": "Python: Data Processor",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/data-manager/data_manager.py",
+            "program": "${workspaceFolder}/pkg/data-processor/data_processor.py",
             "console": "integratedTerminal",
             "args": [
                 "--database", "../crab-crawler/db/crawl_results.db"
             ]
+        },
+        {
+            "name": "GO Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go"
         }
     ]
 }
