@@ -21,8 +21,8 @@
                 </form>
             </div>
             <div class="flex items-center">
-                <button hx-get="/network" hx-target="#networkContent" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Load Network Data</button>
-                <button hx-post="/export" hx-boost="true" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Export Crawl Data</button>
+                <button hx-get="/network" hx-target="#networkContent" hx-indicator="#loading" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Load Network Data</button>
+                <a href="/export" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Export Crawl Data</a>
             </div>
         </div>
         <div class="w-1/2 flex flex-col items-center space-y-4">
@@ -63,6 +63,8 @@
         </div>
     </main>
     <div id="crawlContent" class="relative mt-4"></div>
-    <div id="networkContent" class="relative mt-4"></div>
+    <div id="networkContent" class="relative mt-4">
+        <div id="loading" style="display: none;">Loading...</div>
+    </div>
 </body>
 </html>
