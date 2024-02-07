@@ -8,3 +8,4 @@ html/network.html
 lib
 dist
 results.db
+pkg/data-crawler/config.json

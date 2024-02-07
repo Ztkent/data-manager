@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/pkg/data-processor/data_processor.py",
             "console": "integratedTerminal",
             "args": [
-                "--database", "../crab-crawler/db/crawl_results.db"
+                "--database", "pkg/data-crawler/results.db"
             ]
         },
         {

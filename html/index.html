@@ -16,7 +16,7 @@
         <div class="w-1/2 flex flex-col items-center">
             <div class="flex items-center mb-4">
                 <form hx-post="/crawl" hx-target="#crawlContent">
-                    <input type="text" id="crawl" placeholder="https://www.example.com" class="px-4 py-2 border rounded" />
+                    <input type="text" id="crawlInput" name="crawlInput" placeholder="https://www.example.com" class="px-4 py-2 border rounded" />
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl</button>
                 </form>
             </div>
