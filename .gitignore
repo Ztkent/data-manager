@@ -9,3 +9,4 @@ lib
 dist
 results.db
 pkg/data-crawler/config.json
+test-sites

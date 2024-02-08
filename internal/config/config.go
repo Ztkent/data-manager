@@ -1,7 +1,9 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -30,39 +32,41 @@ type Config struct {
 func NewDefaultConfig() *Config {
 	return &Config{
 		StartingURL:           "https://www.cnn.com",
-		PermittedDomains:      []string{"www.cnn.com"},
+		PermittedDomains:      []string{},
 		BlacklistDomains:      []string{},
 		RotateUserAgents:      true,
 		RespectRobots:         true,
 		FreeCrawl:             true,
-		MaxURLsToVisit:        500,
+		MaxURLsToVisit:        5,
 		MaxThreads:            10,
 		CrawlerTimeout:        3600,
 		CrawlerRequestTimeout: 60,
 		CrawlerRequestDelayMs: 1000,
 		CollectHTML:           false,
-		CollectImages:         true,
-		Debug:                 true,
-		LiveLogging:           true,
+		CollectImages:         false,
+		Debug:                 false,
+		LiveLogging:           false,
 		SqliteEnabled:         true,
 		SqlitePath:            "pkg/data-crawler/results.db",
 	}
 }
 
-func StartCrawlerWithConfig(config *Config) {
-	// marshall the config to json, and write to file
+func StartCrawlerWithConfig(ctx context.Context, config *Config, crawlChan chan string) error {
 	json, err := json.Marshal(config)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	path := WriteJsonToFile(json)
 	go func() {
-		cmd := exec.Command("./pkg/data-crawler/v0.1.0/data-crawler", "-c", path)
+		cmd := exec.CommandContext(ctx, "./pkg/data-crawler/v0.1.0/data-crawler", "-c", path)
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
 		}
+		// Notify the channel that the crawler is done
+		crawlChan <- config.StartingURL
 	}()
+	return nil
 }
 
 func WriteJsonToFile(json []byte) string {

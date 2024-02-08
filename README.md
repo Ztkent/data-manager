@@ -1,2 +1,2 @@
 # Data-Manager
-Crawl, collect, and visualize data from from across the web.
+Crawl, collect, visualize, and extract data from from across the web.

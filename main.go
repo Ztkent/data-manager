@@ -1,45 +1,39 @@
 package main
 
 import (
+	"context"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/Ztkent/data-manager/internal/config"
-	"github.com/Ztkent/data-manager/internal/data"
+	"github.com/Ztkent/data-manager/internal/routes"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
 func main() {
+	// Initialize router and middleware
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "html/index.html")
-	})
+	// Initialize crawlMap and crawlChan
+	crawlMap := make(map[string]context.CancelFunc)
+	crawlChan := make(chan string)
+	crawlManager := routes.Manager{CrawlMap: crawlMap, CrawlChan: crawlChan}
 
-	r.Get("/network", func(w http.ResponseWriter, r *http.Request) {
-		data.StartProcessor()
-		time.Sleep(1 * time.Second)
-		http.ServeFile(w, r, "html/network.html")
-	})
+	// Define routes
+	defineRoutes(r, &crawlManager)
 
-	r.Post("/crawl", func(w http.ResponseWriter, r *http.Request) {
-		url := r.FormValue("crawlInput")
-		w.Write([]byte("Crawling started at " + url))
-		config.StartCrawlerWithConfig(config.NewDefaultConfig())
-	})
+	// Handle any finished crawlers
+	go crawlManager.HandleFinishedCrawlers()
 
-	r.Get("/export", func(w http.ResponseWriter, r *http.Request) {
-		filePath := "pkg/data-crawler/results.db"
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			http.Error(w, "File not found", http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Content-Disposition", "attachment; filename=results.db")
-		w.Header().Set("Content-Type", "application/octet-stream")
-		http.ServeFile(w, r, filePath)
-	})
+	// Start server
 	http.ListenAndServe(":8080", r)
+}
+
+func defineRoutes(r *chi.Mux, crawlManager *routes.Manager) {
+	r.Get("/", routes.ServeIndex)
+	r.Get("/network", routes.ServeNetwork)
+	r.Get("/export", routes.ServeResults)
+	r.Post("/crawl", crawlManager.CrawlHandler())
+	r.Post("/kill-all-crawlers", crawlManager.KillAllCrawlersHandler())
+	r.Get("/active-crawlers", crawlManager.ActiveCrawlersHandler())
 }
