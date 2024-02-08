@@ -1,7 +1,9 @@
 package routes
 
 import (
+	"bufio"
 	"context"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -48,6 +50,10 @@ func ServeResults(w http.ResponseWriter, r *http.Request) {
 func (m *Manager) CrawlHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url := r.FormValue("crawlInput")
+		if url == "" {
+			http.Error(w, "No URL provided", http.StatusBadRequest)
+			return
+		}
 		curr_config := config.NewDefaultConfig()
 		curr_config.StartingURL = url
 
@@ -61,6 +67,44 @@ func (m *Manager) CrawlHandler() http.HandlerFunc {
 	}
 }
 
+func (m *Manager) CrawlRandomHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		randomURL, err := selectRandomUrl()
+		if err != nil {
+			http.Error(w, "Error selecting starting url", http.StatusInternalServerError)
+			return
+		}
+
+		curr_config := config.NewDefaultConfig()
+		curr_config.StartingURL = randomURL
+
+		ctxCrawler, cancel := context.WithCancel(context.Background())
+		m.CrawlMap[randomURL] = cancel
+
+		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, m.CrawlChan)
+		if err != nil {
+			http.Error(w, "Error starting crawler", http.StatusInternalServerError)
+		}
+	}
+}
+
+func selectRandomUrl() (string, error) {
+	file, err := os.Open("internal/routes/test-sites")
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	urls := make([]string, 0)
+	for scanner.Scan() {
+		urls = append(urls, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	randomURL := urls[rand.Intn(len(urls))]
+	return randomURL, nil
+}
 func (m *Manager) KillAllCrawlersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, cancel := range m.CrawlMap {
@@ -70,6 +114,10 @@ func (m *Manager) KillAllCrawlersHandler() http.HandlerFunc {
 }
 
 func (m *Manager) ActiveCrawlersHandler() http.HandlerFunc {
+	// TODO: Instead of a simple list, return a table with html using a template
+	// if there arent any crawlers, return a empty table
+	// the table should have a column for the url and a column for the cancel button
+	// the cancel button should call the KillAllCrawlersHandler with the url as a parameter using htmx for the request
 	return func(w http.ResponseWriter, r *http.Request) {
 		for url := range m.CrawlMap {
 			w.Write([]byte(url + "\n"))

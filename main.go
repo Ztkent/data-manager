@@ -33,7 +33,9 @@ func defineRoutes(r *chi.Mux, crawlManager *routes.Manager) {
 	r.Get("/", routes.ServeIndex)
 	r.Get("/network", routes.ServeNetwork)
 	r.Get("/export", routes.ServeResults)
+	// r.Post("/uploda", crawlManager.UploadHandler())
 	r.Post("/crawl", crawlManager.CrawlHandler())
+	r.Post("/crawl-random", crawlManager.CrawlRandomHandler())
 	r.Post("/kill-all-crawlers", crawlManager.KillAllCrawlersHandler())
 	r.Get("/active-crawlers", crawlManager.ActiveCrawlersHandler())
 }

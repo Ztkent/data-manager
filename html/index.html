@@ -1,75 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.6.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
-<body>
-    <header class="bg-blue-500 p-4 flex justify-between items-center">
-        <h1 class="text-white">Welcome to Data Manager</h1>
-        <button class="bg-white text-blue-500 px-4 py-2 rounded">Login</button>
+<body class="bg-gray-900 text-gray-300 font-sans">
+    <header class="bg-gray-800 p-4 flex justify-between items-center">
+        <h1 class="text-white text-lg font-semibold">Welcome to Data Manager</h1>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded">Login</button>
     </header>
-    <main class="p-4 flex">
-        <div class="w-1/2 flex flex-col items-center">
-            <div class="flex items-center mb-4">
-                <form hx-post="/crawl" hx-target="#crawlContent">
-                    <input type="text" id="crawlInput" name="crawlInput" placeholder="https://www.example.com" class="px-4 py-2 border rounded" />
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl</button>
-                </form>
-            </div>
-            <div class="flex items-center">
-                <button hx-get="/network" hx-target="#networkContent" hx-indicator="#loading" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Load Network Data</button>
-                <a href="/export" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Export Crawl Data</a>
-            </div>
-            <div class="flex items-center">
-                <button hx-post="/kill-all-crawlers" hx-swap="none" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Stop Crawling</button>
-                <button hx-get="/active-crawlers" hx-target="#activeCrawlers" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Active Crawlers</button>
-            </div>
-        </div>
-        <div class="w-1/2 flex flex-col items-center space-y-4">
-            <div class="flex items-center mb-4">
-                <form hx-post="/upload" hx-target="#uploadStatus">
-                    <input type="file" id="dbFile" name="dbFile" accept=".sqlite,.db,.db3,.sqlite3" class="hidden" />
-                    <label for="dbFile" class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer">
-                        Select .sqlite DB
-                    </label>
-                </form>
-                <div id="uploadStatus" class="relative ml-4">No DB Selected</div>
-            </div>
-            <div>
-                <span class="mr-2">Crawl Options:</span>
-                <div class="flex space-x-4">
-                    <label>
-                        <input type="radio" name="testRadio" value="option1" class="mr-1" />
-                        Option 1
-                    </label>
-                    <label>
-                        <input type="radio" name="testRadio" value="option2" class="mr-1" />
-                        Option 2
-                    </label>
-                    <label>
-                        <input type="radio" name="testRadio" value="option3" class="mr-1" />
-                        Option 3
-                    </label>
+    <main class="p-4 flex justify-center">
+        <form id="crawler-form">
+            <div class="flex flex-col items-center">
+                <div class="flex items-center mb-4">
+                    <form class="flex items-center">
+                        <input type="text" id="crawlInput" name="crawlInput" placeholder="https://www.example.com" class="px-4 py-2 border rounded" />
+                        <button hx-post="/crawl" hx-target="#crawlContent" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl</button>
+                        <button hx-post="/crawl-random" hx-target="#crawlContent" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl Random</button>
+                    </form>
+               </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <button hx-get="/network" hx-target="#networkContent" hx-indicator="#loading" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Load Network Data</button>
+                    <a href="/export" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Export Crawl Data</a>
+                    <button hx-post="/kill-all-crawlers" hx-swap="none" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Stop Crawling</button>
+                </div>
+                <div class="space-y-4 mt-4">
+                    <details class="w-full">
+                        <summary class="cursor-pointer">Additional Crawl Options</summary>
+                        <form class="grid grid-cols-2 gap-4 p-4">
+                            <label class="flex items-center">
+                                Permitted Domains:
+                                <input type="text" name="PermittedDomains" placeholder="domain1.com,domain2.com" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                            </label>
+                            <label class="flex items-center">
+                                Blacklist Domains:
+                                <input type="text" name="BlacklistDomains" placeholder="domain1.com,domain2.com" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Rotate User Agents:
+                                <input type="checkbox" name="RotateUserAgents" checked class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Respect Robots:
+                                <input type="checkbox" name="RespectRobots" checked class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Max URLs to Visit:
+                                <input type="number" name="MaxURLsToVisit" value="5" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Crawler Timeout:
+                                <input type="number" name="CrawlerTimeout" value="3600" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Crawler Request Timeout:
+                                <input type="number" name="CrawlerRequestTimeout" value="60" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Crawler Request Delay (ms):
+                                <input type="number" name="CrawlerRequestDelayMs" value="1000" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Collect HTML:
+                                <input type="checkbox" name="CollectHTML" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Collect Images:
+                                <input type="checkbox" name="CollectImages" class="ml-2" />
+                            </label>
+                            <label class="flex items-center">
+                                Free Crawl:
+                                <input type="checkbox" name="FreeCrawl" checked class="ml-2" />
+                            </label>
+                        </form>
+                    </details>
                 </div>
             </div>
-            <div>
-                <span class="mr-2">Dropdown:</span>
-                <select class="border px-2 py-1 rounded">
-                    <option value="option1">Option 1</option>
-                    <option value="option2">Option 2</option>
-                    <option value="option3">Option 3</option>
-                </select>
-            </div>
-        </div>
+        </form>
     </main>
-    <div id="activeCrawlers" class="relative mt-4"></div>
-    <div id="crawlContent" class="relative mt-4"></div>
-    <div id="networkContent" class="relative mt-4">
-        <div id="loading" style="display: none;">Loading...</div>
-    </div>
+    <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="relative mt-4 border border-blue-500 p-4 rounded"></div>
+    <div id="crawlContent" class="relative mt-4 border border-blue-500 p-4 rounded"></div>
+    <div id="networkContent" class="relative mt-4 border border-blue-500 p-4 rounded"></div>
 </body>
 </html>
