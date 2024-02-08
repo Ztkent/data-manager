@@ -27,7 +27,7 @@
                 <div class="grid grid-cols-3 gap-4">
                     <button hx-get="/network" hx-target="#networkContent" hx-indicator="#loading" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Load Network Data</button>
                     <a href="/export" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Export Crawl Data</a>
-                    <button hx-post="/kill-all-crawlers" hx-swap="none" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Stop Crawling</button>
+                    <button hx-post="/kill-all-crawlers" hx-swap="none" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Stop All Crawling</button>
                 </div>
                 <div class="space-y-4 mt-4">
                     <details class="w-full">
@@ -83,8 +83,20 @@
             </div>
         </form>
     </main>
-    <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="relative mt-4 border border-blue-500 p-4 rounded"></div>
-    <div id="crawlContent" class="relative mt-4 border border-blue-500 p-4 rounded"></div>
-    <div id="networkContent" class="relative mt-4 border border-blue-500 p-4 rounded"></div>
+    <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 3s" class="relative mt-4 px-4 max-w-4xl mx-auto">
+        <h4 class="text-xl font-bold mb-4">Active Crawlers</h4>
+        <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+            <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+                <tr>
+                    <th class="py-4 px-2">URL</th>
+                    <th class="py-4 px-2">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <div id="crawlContent" class="relative mt-4 border border-blue-500 p-4 rounded px-4 max-w-4xl mx-auto"></div>
+    <div id="networkContent" class="relative mt-4 border border-blue-500 p-4 rounded px-4 max-w-4xl mx-auto"></div>
 </body>
 </html>

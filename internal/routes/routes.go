@@ -3,10 +3,13 @@ package routes
 import (
 	"bufio"
 	"context"
+	"html/template"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
 	"sync"
 	"time"
 
@@ -105,6 +108,7 @@ func selectRandomUrl() (string, error) {
 	randomURL := urls[rand.Intn(len(urls))]
 	return randomURL, nil
 }
+
 func (m *Manager) KillAllCrawlersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, cancel := range m.CrawlMap {
@@ -113,14 +117,51 @@ func (m *Manager) KillAllCrawlersHandler() http.HandlerFunc {
 	}
 }
 
-func (m *Manager) ActiveCrawlersHandler() http.HandlerFunc {
-	// TODO: Instead of a simple list, return a table with html using a template
-	// if there arent any crawlers, return a empty table
-	// the table should have a column for the url and a column for the cancel button
-	// the cancel button should call the KillAllCrawlersHandler with the url as a parameter using htmx for the request
+func (m *Manager) KillCrawlerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logForm(r)
+		url := r.FormValue("url")
+		cancel, ok := m.CrawlMap[url]
+		if !ok {
+			http.Error(w, "Crawler not found", http.StatusNotFound)
+			return
+		}
+		cancel()
+		m.ActiveCrawlersHandler()(w, r)
+	}
+}
+
+func logForm(r *http.Request) {
+	r.ParseForm()
+	for key, values := range r.Form {
+		for _, value := range values {
+			log.Printf("Form key: %s, value: %s\n", key, value)
+		}
+	}
+}
+
+func (m *Manager) ActiveCrawlersHandler() http.HandlerFunc {
+	type Crawler struct {
+		URL string
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		crawlers := make([]Crawler, 0, len(m.CrawlMap))
 		for url := range m.CrawlMap {
-			w.Write([]byte(url + "\n"))
+			crawlers = append(crawlers, Crawler{URL: url})
+		}
+		sort.Slice(crawlers, func(i, j int) bool {
+			return crawlers[i].URL < crawlers[j].URL
+		})
+
+		tmpl, err := template.ParseFiles("html/active_crawlers.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = tmpl.Execute(w, crawlers)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }

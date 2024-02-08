@@ -1,0 +1,20 @@
+<h4 class="text-xl font-bold mb-4">Active Crawlers</h4>
+<table class="w-full text-sm text-left rtl:text-right text-gray-400">
+    <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+        <tr>
+            <th class="py-4 px-2">URL</th>
+            <th class="py-4 px-2">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range $index, $element := .}}
+        <tr class="border-b bg-gray-800 border-gray-700 hover:bg-gray-600">
+            <td scope="row" class="px-6 py-4 font-medium whitespace-nowrap text-white">{{$element.URL}}</td>
+            <td class="py-4 px-6">
+                <input type="hidden" id="url{{$index}}" name="url" value="{{$element.URL}}">
+                <button hx-post="/kill-crawler" hx-include="#url{{$index}}" hx-target="#activeCrawlers" class="bg-red-400 text-white px-4 py-2 rounded">Cancel</button>
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
