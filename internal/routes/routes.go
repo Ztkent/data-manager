@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,7 +26,8 @@ func ServeNetwork(w http.ResponseWriter, r *http.Request) {
 	cmd := exec.Command("python3", "pkg/data-processor/data_processor.py", "--database", "pkg/data-crawler/results.db")
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, "Error generating network file", http.StatusInternalServerError)
+		return
 	}
 	time.Sleep(1 * time.Second)
 	http.ServeFile(w, r, "html/network.html")
@@ -36,7 +36,7 @@ func ServeNetwork(w http.ResponseWriter, r *http.Request) {
 func ServeResults(w http.ResponseWriter, r *http.Request) {
 	filePath := "pkg/data-crawler/results.db"
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		http.Error(w, "File not found", http.StatusNotFound)
+		http.Error(w, "Results DB not found", http.StatusNotFound)
 		return
 	}
 
