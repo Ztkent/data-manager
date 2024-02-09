@@ -34,7 +34,7 @@
                 <div class="grid grid-cols-3 gap-4">
                     <button hx-get="/network" hx-target="#networkContent" hx-indicator="#spinner" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Load Network Data</button>
                     <a href="/export" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Export Crawl Data</a>
-                    <button hx-post="/kill-all-crawlers" hx-indicator="#spinner" hx-swap="none" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Stop All Crawling</button>
+                    <button hx-post="/kill-all-crawlers" hx-indicator="#spinner" hx-target="#crawlStatus" class="bg-blue-500 text-white w-full px-4 py-2 rounded">Stop All Crawling</button>
                 </div>
                 <div id="crawlStatus">
                     <div class="fixed top-16 right-4 m-6 w-64 bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-500 ease-in-out z-50 border-2 border-opacity-50 border-yellow-200">
