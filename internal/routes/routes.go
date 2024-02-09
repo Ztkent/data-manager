@@ -87,13 +87,13 @@ func (m *Manager) CrawlRandomHandler() http.HandlerFunc {
 			return
 		}
 
+		r.Form.Set("StartingURL", randomURL)
 		curr_config, err := config.ParseFormToConfig(r.Form)
 		if err != nil {
 			http.Error(w, "Error parsing config settings, using default", http.StatusBadRequest)
 			curr_config = config.NewDefaultConfig()
 		}
 
-		curr_config.StartingURL = randomURL
 		ctxCrawler, cancel := context.WithCancel(context.Background())
 		m.CrawlMap[randomURL] = cancel
 		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, m.CrawlChan)

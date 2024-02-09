@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -127,5 +128,17 @@ func ParseFormToConfig(form map[string][]string) (*Config, error) {
 			}
 		}
 	}
+	if !config.FreeCrawl && config.StartingURL != "" &&
+		len(config.PermittedDomains) == 1 && config.PermittedDomains[0] == "" {
+		// If no permitted domains are specified, use the starting URL as the only permitted domain
+		url := config.StartingURL
+		re := regexp.MustCompile(`^https?://`)
+		url = re.ReplaceAllString(url, "")
+		if !strings.HasPrefix(url, "www.") {
+			url = "www." + url
+		}
+		config.PermittedDomains[0] = url
+	}
+
 	return config, nil
 }

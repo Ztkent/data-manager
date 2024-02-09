@@ -19,7 +19,7 @@
             <div class="flex flex-col items-center">
                 <div class="flex items-center mb-4">
                     <form class="flex items-center">
-                        <input type="text" id="crawlInput" name="StartingURL" placeholder="https://www.example.com" class="px-4 py-2 border rounded" />
+                        <input type="text" id="crawlInput" name="StartingURL" placeholder="http://www.example.com" class="px-4 py-2 border rounded text-gray-900" />
                         <button hx-post="/crawl" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl</button>
                         <button hx-post="/crawl-random" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl Random</button>
                         <div id="spinner" class="ml-2 htmx-indicator" role="status">
@@ -56,11 +56,11 @@
                         <form id="crawlOptions" class="grid grid-cols-2 gap-4 p-4">
                             <label class="flex items-center">
                                 Permitted Domains:
-                                <input type="text" name="PermittedDomains" placeholder="domain1.com,domain2.com" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                <input type="text" name="PermittedDomains" placeholder="domain1.com, ..." class="ml-2 bg-gray-800 text-white border-gray-600" />
                             </label>
                             <label class="flex items-center">
                                 Blacklist Domains:
-                                <input type="text" name="BlacklistDomains" placeholder="domain1.com,domain2.com" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                <input type="text" name="BlacklistDomains" placeholder="domain1.com, ..." class="ml-2 bg-gray-800 text-white border-gray-600" />
                             </label>
                             <label class="flex items-center">
                                 Rotate User Agents:
