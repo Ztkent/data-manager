@@ -14,12 +14,15 @@ import (
 	"sync"
 
 	"github.com/Ztkent/data-manager/internal/config"
+	"github.com/Ztkent/data-manager/internal/db"
 )
 
-type Manager struct {
+// Every user should get their own crawl manager
+type CrawlManager struct {
 	CrawlMap  map[string]context.CancelFunc
 	CrawlChan chan string
 	sync.Mutex
+	SqliteDB db.Database
 }
 type Toast struct {
 	ToastContent string
@@ -53,7 +56,7 @@ func ServeResults(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
-func (m *Manager) CrawlHandler() http.HandlerFunc {
+func (m *CrawlManager) CrawlHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		curr_config, err := config.ParseFormToConfig(r.Form)
@@ -77,7 +80,7 @@ func (m *Manager) CrawlHandler() http.HandlerFunc {
 	}
 }
 
-func (m *Manager) CrawlRandomHandler() http.HandlerFunc {
+func (m *CrawlManager) CrawlRandomHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		randomURL, err := selectRandomUrl()
@@ -106,7 +109,7 @@ func (m *Manager) CrawlRandomHandler() http.HandlerFunc {
 	}
 }
 
-func (m *Manager) KillAllCrawlersHandler() http.HandlerFunc {
+func (m *CrawlManager) KillAllCrawlersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		numCrawler := len(m.CrawlMap)
 		if numCrawler == 0 {
@@ -124,7 +127,7 @@ func (m *Manager) KillAllCrawlersHandler() http.HandlerFunc {
 	}
 }
 
-func (m *Manager) KillCrawlerHandler() http.HandlerFunc {
+func (m *CrawlManager) KillCrawlerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url := r.FormValue("url")
 		cancel, ok := m.CrawlMap[url]
@@ -136,7 +139,7 @@ func (m *Manager) KillCrawlerHandler() http.HandlerFunc {
 	}
 }
 
-func (m *Manager) ActiveCrawlersHandler() http.HandlerFunc {
+func (m *CrawlManager) ActiveCrawlersHandler() http.HandlerFunc {
 	type Crawler struct {
 		URL string
 	}
@@ -162,7 +165,7 @@ func (m *Manager) ActiveCrawlersHandler() http.HandlerFunc {
 	}
 }
 
-func (m *Manager) HandleFinishedCrawlers() {
+func (m *CrawlManager) HandleFinishedCrawlers() {
 	for {
 		select {
 		case url := <-m.CrawlChan:
@@ -201,7 +204,7 @@ func serveSuccessToast(w http.ResponseWriter, message string) {
 	return
 }
 
-func (m *Manager) DismissToastHandler() http.HandlerFunc {
+func (m *CrawlManager) DismissToastHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}
 }

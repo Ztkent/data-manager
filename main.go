@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Ztkent/data-manager/internal/db"
 	"github.com/Ztkent/data-manager/internal/routes"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -17,7 +18,11 @@ func main() {
 	// Initialize crawlMap and crawlChan
 	crawlMap := make(map[string]context.CancelFunc)
 	crawlChan := make(chan string)
-	crawlManager := routes.Manager{CrawlMap: crawlMap, CrawlChan: crawlChan}
+	crawlManager := routes.CrawlManager{
+		CrawlMap:  crawlMap,
+		CrawlChan: crawlChan,
+		SqliteDB:  db.NewDatabase(nil),
+	}
 
 	// Define routes
 	defineRoutes(r, &crawlManager)
@@ -29,7 +34,7 @@ func main() {
 	http.ListenAndServe(":8080", r)
 }
 
-func defineRoutes(r *chi.Mux, crawlManager *routes.Manager) {
+func defineRoutes(r *chi.Mux, crawlManager *routes.CrawlManager) {
 	r.Get("/", routes.ServeIndex)
 	r.Get("/network", routes.ServeNetwork)
 	r.Get("/export", routes.ServeResults)
