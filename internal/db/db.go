@@ -40,14 +40,6 @@ type Visited struct {
 }
 
 func (db *database) GetRecentVisited() ([]Visited, error) {
-	// If the database is nil, connect to it
-	if db.db == nil {
-		db.db = ConnectSqlite()
-		if db.db == nil {
-			return nil, fmt.Errorf("could not connect to sqlite")
-		}
-	}
-
 	rows, err := db.db.Query(`
         SELECT id, url, referrer, last_visited_at, is_complete, is_blocked
         FROM visited

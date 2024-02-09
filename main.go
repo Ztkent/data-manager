@@ -21,7 +21,7 @@ func main() {
 	crawlManager := routes.CrawlManager{
 		CrawlMap:  crawlMap,
 		CrawlChan: crawlChan,
-		SqliteDB:  db.NewDatabase(nil),
+		SqliteDB:  db.NewDatabase(db.ConnectSqlite()),
 	}
 
 	// Define routes
@@ -44,4 +44,5 @@ func defineRoutes(r *chi.Mux, crawlManager *routes.CrawlManager) {
 	r.Post("/kill-crawler", crawlManager.KillCrawlerHandler())
 	r.Get("/active-crawlers", crawlManager.ActiveCrawlersHandler())
 	r.Get("/dismiss-toast", crawlManager.DismissToastHandler())
+	r.Get("/recent-urls", crawlManager.RecentURLsHandler())
 }

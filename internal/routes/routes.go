@@ -209,6 +209,25 @@ func (m *CrawlManager) DismissToastHandler() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlManager) RecentURLsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		visited, err := m.SqliteDB.GetRecentVisited()
+		if err != nil {
+			log.Default().Println(err)
+			return
+		}
+		tmpl, err := template.ParseFiles("html/recent_visited.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, visited)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func selectRandomUrl() (string, error) {
 	file, err := os.Open("internal/routes/test-sites")
 	if err != nil {

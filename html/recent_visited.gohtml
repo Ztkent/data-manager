@@ -1,0 +1,27 @@
+<h4 class="text-xl font-bold mb-4">Recent URLs</h4>
+<div class="overflow-auto" style="max-height: 30rem;">
+    <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+        <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+            <tr>
+                <th class="py-4 px-2">ID</th>
+                <th class="py-4 px-2">URL</th>
+                <th class="py-4 px-2">Referrer</th>
+                <th class="py-4 px-2">Last Visited At</th>
+                <th class="py-4 px-2">Is Complete</th>
+                <th class="py-4 px-2">Is Blocked</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $index, $element := .}}
+            <tr class="border-b bg-gray-800 border-gray-700 hover:bg-gray-600">
+                <td class="px-6 py-4 font-medium whitespace-nowrap text-white overflow-hidden overflow-ellipsis">{{$element.ID}}</td>
+                <td class="px-6 py-4 font-medium whitespace-nowrap text-white overflow-hidden overflow-ellipsis">{{$element.URL}}</td>
+                <td class="px-6 py-4 font-medium whitespace-nowrap text-white overflow-hidden overflow-ellipsis">{{$element.Referrer}}</td>
+                <td class="px-6 py-4 font-medium whitespace-nowrap text-white overflow-hidden overflow-ellipsis">{{$element.LastVisitedAt}}</td>
+                <td class="px-6 py-4 font-medium whitespace-nowrap text-white overflow-hidden overflow-ellipsis">{{$element.IsComplete}}</td>
+                <td class="px-6 py-4 font-medium whitespace-nowrap text-white overflow-hidden overflow-ellipsis">{{$element.IsBlocked}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
