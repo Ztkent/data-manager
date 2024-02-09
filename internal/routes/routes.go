@@ -21,8 +21,8 @@ import (
 type CrawlManager struct {
 	CrawlMap  map[string]context.CancelFunc
 	CrawlChan chan string
+	SqliteDB  db.Database
 	sync.Mutex
-	SqliteDB db.Database
 }
 type Toast struct {
 	ToastContent string
