@@ -20,6 +20,9 @@ type Manager struct {
 	CrawlChan chan string
 	sync.Mutex
 }
+type Toast struct {
+	ToastContent string
+}
 
 func ServeIndex(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "html/index.html")
@@ -58,7 +61,7 @@ func (m *Manager) CrawlHandler() http.HandlerFunc {
 		}
 
 		if curr_config.StartingURL == "" {
-			http.Error(w, "No URL provided", http.StatusBadRequest)
+			serveToast(w, "No URL provided")
 			return
 		}
 
@@ -66,7 +69,8 @@ func (m *Manager) CrawlHandler() http.HandlerFunc {
 		m.CrawlMap[curr_config.StartingURL] = cancel
 		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, m.CrawlChan)
 		if err != nil {
-			http.Error(w, "Error starting crawler", http.StatusInternalServerError)
+			serveToast(w, "Error starting crawler: "+curr_config.StartingURL)
+			return
 		}
 	}
 }
@@ -76,10 +80,10 @@ func (m *Manager) CrawlRandomHandler() http.HandlerFunc {
 		r.ParseForm()
 		randomURL, err := selectRandomUrl()
 		if err != nil {
-			http.Error(w, "Error selecting starting url", http.StatusInternalServerError)
+			serveToast(w, "Error selecting starting url")
 			return
 		} else if randomURL == "" {
-			http.Error(w, "Failed to randomly select url", http.StatusNotFound)
+			serveToast(w, "Failed to randomly select url")
 			return
 		}
 
@@ -94,7 +98,8 @@ func (m *Manager) CrawlRandomHandler() http.HandlerFunc {
 		m.CrawlMap[randomURL] = cancel
 		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, m.CrawlChan)
 		if err != nil {
-			http.Error(w, "Error starting crawler", http.StatusInternalServerError)
+			serveToast(w, "Error starting crawler: "+curr_config.StartingURL)
+			return
 		}
 	}
 }
@@ -113,7 +118,6 @@ func (m *Manager) KillCrawlerHandler() http.HandlerFunc {
 		cancel, ok := m.CrawlMap[url]
 		if !ok {
 			http.Error(w, "Crawler not found", http.StatusNotFound)
-			return
 		}
 		cancel()
 		m.ActiveCrawlersHandler()(w, r)
@@ -152,6 +156,26 @@ func (m *Manager) HandleFinishedCrawlers() {
 		case url := <-m.CrawlChan:
 			delete(m.CrawlMap, url)
 		}
+	}
+}
+
+func serveToast(w http.ResponseWriter, message string) {
+	// Render the crawl_status template, which displays the toast
+	tmpl, err := template.ParseFiles("html/crawl_status_toast.gohtml")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	toast := &Toast{ToastContent: message}
+	err = tmpl.Execute(w, toast)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+
+func (m *Manager) DismissToastHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
