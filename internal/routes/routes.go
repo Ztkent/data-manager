@@ -64,7 +64,7 @@ func GenNetwork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Render the active_crawlers template, which displays the active crawlers
-	tmpl, err := template.ParseFiles("html/network_iframe.gohtml")
+	tmpl, err := template.ParseFiles("html/templates/network_iframe.gohtml")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -214,7 +214,7 @@ func (m *CrawlManager) ActiveCrawlersHandler() http.HandlerFunc {
 		})
 
 		// Render the active_crawlers template, which displays the active crawlers
-		tmpl, err := template.ParseFiles("html/active_crawlers.gohtml")
+		tmpl, err := template.ParseFiles("html/templates/active_crawlers.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -237,7 +237,7 @@ func (m *CrawlManager) HandleFinishedCrawlers() {
 
 func serveFailToast(w http.ResponseWriter, message string) {
 	// Render the crawl_status template, which displays the toast
-	tmpl, err := template.ParseFiles("html/crawl_status_toast.gohtml")
+	tmpl, err := template.ParseFiles("html/templates/crawl_status_toast.gohtml")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -252,7 +252,7 @@ func serveFailToast(w http.ResponseWriter, message string) {
 
 func serveSuccessToast(w http.ResponseWriter, message string) {
 	// Render the crawl_status template, which displays the toast
-	tmpl, err := template.ParseFiles("html/crawl_status_toast.gohtml")
+	tmpl, err := template.ParseFiles("html/templates/crawl_status_toast.gohtml")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -277,7 +277,7 @@ func (m *CrawlManager) RecentURLsHandler() http.HandlerFunc {
 			log.Default().Println(err)
 			return
 		}
-		tmpl, err := template.ParseFiles("html/recent_visited.gohtml")
+		tmpl, err := template.ParseFiles("html/templates/recent_visited.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
