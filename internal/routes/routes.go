@@ -8,9 +8,12 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/Ztkent/data-manager/internal/config"
@@ -29,19 +32,47 @@ type Toast struct {
 	Border       string
 }
 
-func ServeIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "html/index.html")
+func ServeHome(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "html/home.html")
 }
 
 func ServeNetwork(w http.ResponseWriter, r *http.Request) {
-	// Generate a network file with the processor
+	// check if the network file exists
+	if _, err := os.Stat("html/network.html"); os.IsNotExist(err) {
+		// call GenNetwork if the file does not exist
+		GenNetwork(w, r)
+		return
+	}
+
+	http.ServeFile(w, r, "html/network.html")
+}
+
+func GenNetwork(w http.ResponseWriter, r *http.Request) {
 	cmd := exec.Command("python3", "pkg/data-processor/data_processor.py", "--database", "pkg/data-crawler/results.db")
+
+	// Check if we have a physics toggle in the request
+	logForm(r)
+	check := r.FormValue("checked")
+	if check == "true" {
+		cmd.Args = append(cmd.Args, "--physics", "true")
+	}
+
+	// Generate a network file with the processor
 	err := cmd.Run()
 	if err != nil {
 		http.Error(w, "Error generating network file", http.StatusInternalServerError)
 		return
 	}
-	http.ServeFile(w, r, "html/network.html")
+	// Render the active_crawlers template, which displays the active crawlers
+	tmpl, err := template.ParseFiles("html/network_iframe.gohtml")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func ServeResults(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +101,13 @@ func (m *CrawlManager) CrawlHandler() http.HandlerFunc {
 			return
 		}
 
+		// ensure the StartingURL is properly formatted
+		valid, reason := ValidateStartingURL(curr_config.StartingURL)
+		if !valid {
+			serveFailToast(w, fmt.Sprintf("%s", reason))
+			return
+		}
+
 		ctxCrawler, cancel := context.WithCancel(context.Background())
 		m.CrawlMap[curr_config.StartingURL] = cancel
 		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, m.CrawlChan)
@@ -78,6 +116,29 @@ func (m *CrawlManager) CrawlHandler() http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func ValidateStartingURL(startingURL string) (bool, string) {
+	u, err := url.Parse(startingURL)
+	if err != nil {
+		return false, "Invalid URL"
+	}
+	// Valid the url
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return false, "Invalid URL scheme, must be http or https"
+	} else if u.Host == "" {
+		return false, "Empty URL host"
+	} else if !strings.HasPrefix(u.Host, "www.") {
+		return false, "Invalid URL host, must start with www."
+	}
+
+	// More generic failure, but be sure
+	match, _ := regexp.MatchString(`^https?://www\.[\w.-]+\.[A-Za-z]{2,}$`, startingURL)
+	if !match {
+		return false, "Invalid Crawl URL"
+	}
+
+	return true, ""
 }
 
 func (m *CrawlManager) CrawlRandomHandler() http.HandlerFunc {

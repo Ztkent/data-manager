@@ -6,21 +6,43 @@
     <title>Data Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&display=swap" rel="stylesheet">
+    <style>
+        /* Toggle the graph physics */
+        input:checked ~ .dot {
+            transform: translateX(100%);
+            background-color: #4F46E5;
+        }
+        input:checked ~ .block {
+            background-color: #3B82F6;
+        }
+    </style>
+
 </head>
-<body class="bg-gray-900 text-gray-300 font-sans">
-    <header class="bg-gray-800 p-4 flex justify-between items-center">
-        <h1 class="text-white text-lg font-semibold">Welcome to Data Manager</h1>
-        <button class="bg-blue-500 text-white px-4 py-2 rounded">Login</button>
+<body class="bg-gray-900 text-gray-300 font-sans" style="font-family: 'Roboto', sans-serif;">
+    <header class="bg-gray-800 p-2 flex justify-between items-center"> <!-- Adjust padding here -->
+        <div class="flex items-center">
+            <img src="img/s_logo.png" alt="Logo" class="mr-2 w-12 h-12">
+            <h1 class="text-white text-lg font-semibold" style="font-family: 'Roboto', sans-serif; font-weight: 300;">Data Manager</h1>
+        </div>
+        <button class="mr-4 bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded">Login</button>
     </header>
+    <div class="bg-gray-900 text-white text-center pt-10 pb-4 px-4 border-t-4 border-gray-600">
+        <h1 class="text-2xl font-bold mb-2">Welcome to Data Manager</h1>
+        <p class="text-sm mb-2">Navigate the internet, analyze content, metadata, and website structure.</p>
+        <p class="text-sm">Enter the URL below and press "Start Crawling"</p>
+    </div>
     <main class="p-4 flex justify-center">
         <form id="crawler-form">
             <div class="flex flex-col items-center">
                 <div class="flex items-center mb-4">
                     <form class="flex items-center">
                         <input type="text" id="crawlInput" name="StartingURL" placeholder="https://www.example.com" class="px-4 py-2 w-80 border rounded text-gray-900 ml-16" />
-                        <button hx-post="/crawl" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Crawl</button>
+                        <button hx-post="/crawl" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="bg-blue-500 text-white px-4 py-2 rounded ml-4">Start Crawling</button>
                         <div id="spinner" class="ml-2 htmx-indicator" role="status">
                             <svg aria-hidden="true" class="w-8 h-8 animate-spin text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="grey" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
@@ -122,7 +144,7 @@
                     </a>
                 </li>
                 <li class="me-2">
-                    <button hx-get="/network" hx-swap="none" hx-indicator="#spinner" class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="networkContent">
+                    <button class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="networkTab">
                         <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M5 11.424V1a1 1 0 1 0-2 0v10.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.228 3.228 0 0 0 0-6.152ZM19.25 14.5A3.243 3.243 0 0 0 17 11.424V1a1 1 0 0 0-2 0v10.424a3.227 3.227 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.243 3.243 0 0 0 2.25-3.076Zm-6-9A3.243 3.243 0 0 0 11 2.424V1a1 1 0 0 0-2 0v1.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0V8.576A3.243 3.243 0 0 0 13.25 5.5Z"/>
                         </svg>Network Graph
@@ -131,10 +153,13 @@
             </ul>
         </div>
         <div class="relative mt-4 px-4 max-w-4xl mx-auto">
-            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="load, every 3s" class="tab-content"></div>
-            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="load, every 10s" class="hidden tab-content"></div>
-            <div id="networkContent" class="hidden tab-content overflow-auto">
-                <iframe src="/network" width="100%" height="600px"></iframe>
+            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="load, every 3s" class="tab-content overflow-auto"></div>
+            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="load, every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;"></div>
+            <div id="networkTab" class="hidden tab-content overflow-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-xl font-bold">Network Graph</h4>
+                </div>
+                <iframe id="networkContent" src="/network" width="100%" height="600px"></iframe>
             </div>
         </div>
     </div>
@@ -142,6 +167,7 @@
 
 <script>
     window.onload = setupTabs;
+    /* Enable tab switching */
     function setupTabs() {
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
