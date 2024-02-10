@@ -54,6 +54,7 @@ func defineRoutes(r *chi.Mux, crawlManager *routes.CrawlManager) {
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "html", "img")
 	FileServer(r, "/img", http.Dir(filesDir))
+	FileServer(r, "/favicon.ico", http.Dir(filesDir))
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {

@@ -5,3 +5,5 @@ Crawl, collect, visualize, and extract data from from across the web.
 - add collected files tab
 
 - assign every vistor a unique id, and track it in seperate db
+
+- add footer
