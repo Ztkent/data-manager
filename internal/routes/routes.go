@@ -1,12 +1,10 @@
 package routes
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -270,6 +268,30 @@ func (m *CrawlManager) DismissToastHandler() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlManager) EnsureJWTHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, err := r.Cookie("jwt")
+		if err == http.ErrNoCookie {
+			// Cookie does not exist, set it
+			jwt, err := generateJWT()
+			if err != nil {
+				http.Error(w, "Failed to generate JWT", http.StatusInternalServerError)
+				return
+			}
+			http.SetCookie(w, &http.Cookie{
+				Name:     "jwt",
+				Value:    jwt,
+				HttpOnly: true,
+				Secure:   false, // Set to true if your site uses HTTPS
+				SameSite: http.SameSiteStrictMode,
+			})
+		} else if err != nil {
+			// Some other error occurred
+			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
+		}
+	}
+}
+
 func (m *CrawlManager) RecentURLsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		visited, err := m.SqliteDB.GetRecentVisited()
@@ -285,33 +307,6 @@ func (m *CrawlManager) RecentURLsHandler() http.HandlerFunc {
 		err = tmpl.Execute(w, visited)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	}
-}
-
-func selectRandomUrl() (string, error) {
-	file, err := os.Open("internal/routes/test-sites")
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	urls := make([]string, 0)
-	for scanner.Scan() {
-		urls = append(urls, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-	randomURL := urls[rand.Intn(len(urls))]
-	return randomURL, nil
-}
-
-func logForm(r *http.Request) {
-	r.ParseForm()
-	for key, values := range r.Form {
-		for _, value := range values {
-			log.Printf("Form key: %s, value: %s\n", key, value)
 		}
 	}
 }

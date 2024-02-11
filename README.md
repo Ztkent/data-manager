@@ -6,4 +6,5 @@ Crawl, collect, visualize, and extract data from from across the web.
 
 - assign every vistor a unique id, and track it in seperate db
 
-- add footer
+- add login and about modals
+- login is signup for new users

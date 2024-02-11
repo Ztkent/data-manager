@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +15,9 @@ import (
 )
 
 func main() {
+	// Handle any required environment variables
+	checkRequiredEnvs()
+
 	// Initialize router and middleware
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -41,16 +45,19 @@ func defineRoutes(r *chi.Mux, crawlManager *routes.CrawlManager) {
 	r.Get("/", routes.ServeHome)
 	r.Get("/network", routes.ServeNetwork)
 	r.Post("/gen-network", routes.GenNetwork)
-	r.Get("/export", routes.ServeResults)
 	r.Post("/crawl", crawlManager.CrawlHandler())
 	r.Post("/crawl-random", crawlManager.CrawlRandomHandler())
 	r.Post("/kill-all-crawlers", crawlManager.KillAllCrawlersHandler())
 	r.Post("/kill-crawler", crawlManager.KillCrawlerHandler())
 	r.Get("/active-crawlers", crawlManager.ActiveCrawlersHandler())
-	r.Get("/dismiss-toast", crawlManager.DismissToastHandler())
 	r.Get("/recent-urls", crawlManager.RecentURLsHandler())
+	r.Get("/export", routes.ServeResults)
+	r.Get("/dismiss-toast", crawlManager.DismissToastHandler())
 
-	// Serve static images
+	// Ensure that the user has been assigned, and is using a valid JWT
+	r.Post("/ensure-jwt", crawlManager.EnsureJWTHandler())
+
+	// Serve static files
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "html", "img")
 	FileServer(r, "/img", http.Dir(filesDir))
@@ -69,4 +76,11 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 	r.Get(path+"*", func(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix(path, http.FileServer(root)).ServeHTTP(w, r)
 	})
+}
+
+func checkRequiredEnvs() {
+	secret := os.Getenv("JWT_TOKEN")
+	if secret == "" {
+		log.Fatal("JWT_TOKEN is not set")
+	}
 }
