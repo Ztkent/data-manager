@@ -29,6 +29,7 @@ func main() {
 
 	// Handle any finished crawlers
 	go crawlMaster.HandleFinishedCrawlers()
+	// TODO: Clean up any resources from old crawl managers.
 
 	// Start server
 	http.ListenAndServe(":8080", r)

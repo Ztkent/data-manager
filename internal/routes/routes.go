@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -40,6 +41,28 @@ func (m *CrawlManager) GetDBPath() string {
 
 func (m *CrawlManager) GetNetworkPath() string {
 	return fmt.Sprintf("user/network/network_%s.html", m.UserID)
+}
+
+func (m *CrawlManager) GetConfigPath() string {
+	return fmt.Sprintf("user/config/config_%s.json", m.UserID)
+}
+
+func (m *CrawlManager) StartCrawlerWithConfig(ctx context.Context, curr_config *config.Config) error {
+	json, err := json.Marshal(curr_config)
+	if err != nil {
+		return err
+	}
+	path := config.WriteJsonToFile(json, m.GetConfigPath())
+	go func() {
+		cmd := exec.CommandContext(ctx, "./pkg/data-crawler/v0.1.0/data-crawler", "-c", path)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+		// Notify the channel that the crawler is done
+		m.CrawlChan <- curr_config.StartingURL
+	}()
+	return nil
 }
 
 // Crawl Master
@@ -174,7 +197,7 @@ func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 
 		ctxCrawler, cancel := context.WithCancel(context.Background())
 		crawlManager.CrawlMap[curr_config.StartingURL] = cancel
-		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, crawlManager.CrawlChan)
+		err = crawlManager.StartCrawlerWithConfig(ctxCrawler, curr_config)
 		if err != nil {
 			serveFailToast(w, "Error starting crawler: "+curr_config.StartingURL)
 			return
@@ -209,7 +232,7 @@ func (m *CrawlMaster) CrawlRandomHandler() http.HandlerFunc {
 
 		ctxCrawler, cancel := context.WithCancel(context.Background())
 		crawlManager.CrawlMap[randomURL] = cancel
-		err = config.StartCrawlerWithConfig(ctxCrawler, curr_config, crawlManager.CrawlChan)
+		err = crawlManager.StartCrawlerWithConfig(ctxCrawler, curr_config)
 		if err != nil {
 			serveFailToast(w, "Error starting crawler: "+curr_config.StartingURL)
 			return

@@ -10,5 +10,3 @@ Crawl, collect, visualize, and extract data from from across the web.
 - login is signup for new users
 
 - cleanup, remove and files for users not active in db for 3 days
-
-- Per user configs

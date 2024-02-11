@@ -1,12 +1,8 @@
 package config
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -54,34 +50,14 @@ func NewDefaultConfig() *Config {
 	}
 }
 
-func StartCrawlerWithConfig(ctx context.Context, config *Config, crawlChan chan string) error {
-	// TODO: This should be per user
-	json, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-	path := WriteJsonToFile(json)
-	go func() {
-		cmd := exec.CommandContext(ctx, "./pkg/data-crawler/v0.1.0/data-crawler", "-c", path)
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
-		}
-		// Notify the channel that the crawler is done
-		crawlChan <- config.StartingURL
-	}()
-	return nil
-}
-
-func WriteJsonToFile(json []byte) string {
-	// TODO: This should be per user
-	file, err := os.Create("pkg/data-crawler/config.json")
+func WriteJsonToFile(json []byte, path string) string {
+	file, err := os.Create(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 	file.Write(json)
-	return "pkg/data-crawler/config.json"
+	return path
 }
 
 func ParseFormToConfig(form map[string][]string, outputPath string) (*Config, error) {

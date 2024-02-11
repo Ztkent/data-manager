@@ -11,4 +11,3 @@ user/
 
 # Configurations
 .env
-pkg/data-crawler/config.json
