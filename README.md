@@ -11,6 +11,4 @@ Crawl, collect, visualize, and extract data from from across the web.
 
 - cleanup, remove and files for users not active in db for 3 days
 
-- safe concurrent map access
-
-- reload network graph regularly
+- Per user configs

@@ -19,7 +19,7 @@ import (
 // Manage all users
 type CrawlMaster struct {
 	ActiveManagers map[string]*CrawlManager
-	sync.Mutex
+	sync.RWMutex
 }
 
 // Manage a single user
@@ -30,7 +30,7 @@ type CrawlManager struct {
 	SqliteDB  db.Database
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
-	sync.Mutex
+	sync.RWMutex
 }
 
 // Crawl Manager
@@ -51,9 +51,12 @@ func (m *CrawlMaster) GetCrawlManagerForRequest(r *http.Request) (*CrawlManager,
 
 	// Get the crawl manager for the user
 	var crawlManager *CrawlManager
-	if crawlManager = m.ActiveManagers[jwt.Value]; crawlManager == nil {
-		// Check again in-case another request created the crawl manager
-		if crawlManager = m.ActiveManagers[jwt.Value]; crawlManager == nil {
+	m.RLock()
+	crawlManager = m.ActiveManagers[jwt.Value]
+	m.RUnlock()
+
+	if crawlManager == nil {
+		if crawlManager == nil {
 			now := time.Now()
 			crawlManager = &CrawlManager{
 				UserID:    jwt.Value,
@@ -63,7 +66,10 @@ func (m *CrawlMaster) GetCrawlManagerForRequest(r *http.Request) (*CrawlManager,
 				UpdatedAt: &now,
 			}
 			crawlManager.SqliteDB = db.NewDatabase(db.ConnectSqlite(crawlManager.GetDBPath()))
+
+			m.Lock()
 			m.ActiveManagers[jwt.Value] = crawlManager
+			m.Unlock()
 		}
 	}
 	return crawlManager, nil
@@ -284,16 +290,47 @@ func (m *CrawlMaster) ActiveCrawlersHandler() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlMaster) RecentURLsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		crawlManager, err := m.GetCrawlManagerForRequest(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		visited, err := crawlManager.SqliteDB.GetRecentVisited()
+		if err != nil {
+			log.Default().Println(err)
+			return
+		}
+		tmpl, err := template.ParseFiles("html/templates/recent_visited.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, visited)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func (m *CrawlMaster) HandleFinishedCrawlers() {
 	for {
-		for _, crawler := range m.ActiveManagers {
-			select {
-			case url := <-crawler.CrawlChan:
-				delete(crawler.CrawlMap, url)
-			default:
-				continue
+		time.Sleep(1 * time.Second)
+		func() {
+			m.RLock()
+			defer m.RUnlock()
+			for _, crawler := range m.ActiveManagers {
+				select {
+				case url := <-crawler.CrawlChan:
+					crawler.Lock()
+					defer crawler.Unlock()
+					delete(crawler.CrawlMap, url)
+				default:
+					continue
+				}
 			}
-		}
+		}()
 	}
 }
 
@@ -322,30 +359,6 @@ func (m *CrawlMaster) EnsureJWTHandler() http.HandlerFunc {
 		} else if err != nil {
 			// Some other error occurred
 			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
-		}
-	}
-}
-
-func (m *CrawlMaster) RecentURLsHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		crawlManager, err := m.GetCrawlManagerForRequest(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		visited, err := crawlManager.SqliteDB.GetRecentVisited()
-		if err != nil {
-			log.Default().Println(err)
-			return
-		}
-		tmpl, err := template.ParseFiles("html/templates/recent_visited.gohtml")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = tmpl.Execute(w, visited)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }

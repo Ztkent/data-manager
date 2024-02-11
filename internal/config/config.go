@@ -55,6 +55,7 @@ func NewDefaultConfig() *Config {
 }
 
 func StartCrawlerWithConfig(ctx context.Context, config *Config, crawlChan chan string) error {
+	// TODO: This should be per user
 	json, err := json.Marshal(config)
 	if err != nil {
 		return err
@@ -73,6 +74,7 @@ func StartCrawlerWithConfig(ctx context.Context, config *Config, crawlChan chan 
 }
 
 func WriteJsonToFile(json []byte) string {
+	// TODO: This should be per user
 	file, err := os.Create("pkg/data-crawler/config.json")
 	if err != nil {
 		log.Fatal(err)

@@ -8,7 +8,6 @@
             "program": "${workspaceFolder}/pkg/data-processor/data_processor.py",
             "console": "integratedTerminal",
             "args": [
-                "--database", "pkg/data-crawler/results.db"
             ]
         },
         {
