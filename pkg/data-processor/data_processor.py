@@ -8,7 +8,7 @@ from graph import save_pyvis_link_graph
 def main():
     parser = argparse.ArgumentParser(description="Process and visualize data from a database.")
     parser.add_argument('--database', default='results.db', help='The path to the database')
-    parser.add_argument('--physics', default=False, help='Enable the graph physics')
+    parser.add_argument('--output', default='"pkg/data-crawler/results.db', help='The path to the output file')
 
     args = parser.parse_args()
 
@@ -16,7 +16,7 @@ def main():
     if conn is not None:
         with conn:
             links = fetch_all_links(conn)
-            save_pyvis_link_graph(links, args.physics)
+            save_pyvis_link_graph(links, False, args.output)
     else:
         print(f"Failed to create database connection to {args.database}")
 

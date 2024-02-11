@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/Ztkent/data-manager/internal/db"
 	"github.com/Ztkent/data-manager/internal/routes"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -22,40 +20,35 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	// Initialize crawlMap and crawlChan
-	crawlMap := make(map[string]context.CancelFunc)
-	crawlChan := make(chan string)
-	crawlManager := routes.CrawlManager{
-		CrawlMap:  crawlMap,
-		CrawlChan: crawlChan,
-		SqliteDB:  db.NewDatabase(db.ConnectSqlite()),
+	crawlMaster := routes.CrawlMaster{
+		ActiveManagers: make(map[string]*routes.CrawlManager),
 	}
 
 	// Define routes
-	defineRoutes(r, &crawlManager)
+	defineRoutes(r, &crawlMaster)
 
 	// Handle any finished crawlers
-	go crawlManager.HandleFinishedCrawlers()
+	go crawlMaster.HandleFinishedCrawlers()
 
 	// Start server
 	http.ListenAndServe(":8080", r)
 }
 
-func defineRoutes(r *chi.Mux, crawlManager *routes.CrawlManager) {
-	r.Get("/", routes.ServeHome)
-	r.Get("/network", routes.ServeNetwork)
-	r.Post("/gen-network", routes.GenNetwork)
-	r.Post("/crawl", crawlManager.CrawlHandler())
-	r.Post("/crawl-random", crawlManager.CrawlRandomHandler())
-	r.Post("/kill-all-crawlers", crawlManager.KillAllCrawlersHandler())
-	r.Post("/kill-crawler", crawlManager.KillCrawlerHandler())
-	r.Get("/active-crawlers", crawlManager.ActiveCrawlersHandler())
-	r.Get("/recent-urls", crawlManager.RecentURLsHandler())
-	r.Get("/export", routes.ServeResults)
-	r.Get("/dismiss-toast", crawlManager.DismissToastHandler())
+func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
+	r.Get("/", crawlMaster.ServeHome())
+	r.Get("/network", crawlMaster.ServeNetwork())
+	r.Post("/gen-network", crawlMaster.GenNetwork())
+	r.Post("/crawl", crawlMaster.CrawlHandler())
+	r.Post("/crawl-random", crawlMaster.CrawlRandomHandler())
+	r.Post("/kill-all-crawlers", crawlMaster.KillAllCrawlersHandler())
+	r.Post("/kill-crawler", crawlMaster.KillCrawlerHandler())
+	r.Get("/active-crawlers", crawlMaster.ActiveCrawlersHandler())
+	r.Get("/recent-urls", crawlMaster.RecentURLsHandler())
+	r.Get("/export", crawlMaster.ExportDB())
+	r.Get("/dismiss-toast", crawlMaster.DismissToastHandler())
 
 	// Ensure that the user has been assigned, and is using a valid JWT
-	r.Post("/ensure-jwt", crawlManager.EnsureJWTHandler())
+	r.Post("/ensure-jwt", crawlMaster.EnsureJWTHandler())
 
 	// Serve static files
 	workDir, _ := os.Getwd()
@@ -79,8 +72,8 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 }
 
 func checkRequiredEnvs() {
-	secret := os.Getenv("JWT_TOKEN")
+	secret := os.Getenv("JWT_SECRET_TOKEN")
 	if secret == "" {
-		log.Fatal("JWT_TOKEN is not set")
+		log.Fatal("JWT_SECRET_TOKEN is not set")
 	}
 }

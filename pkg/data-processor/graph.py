@@ -3,7 +3,7 @@ from pyvis.network import Network
 import db
 import json
 
-def save_pyvis_link_graph(urls: db.LinkData, enable_physics: bool):
+def save_pyvis_link_graph(urls: db.LinkData, enable_physics, output_file: str) -> None:
     urls = [(link.referrer, link.url) for link in urls[1:]]
     G = Network()
     if G is None:
@@ -62,4 +62,4 @@ def save_pyvis_link_graph(urls: db.LinkData, enable_physics: bool):
         G.add_edge(referrer, url)
 
     # Display the graph
-    G.save_graph("html/network.html")
+    G.save_graph(output_file)

@@ -82,7 +82,7 @@ func WriteJsonToFile(json []byte) string {
 	return "pkg/data-crawler/config.json"
 }
 
-func ParseFormToConfig(form map[string][]string) (*Config, error) {
+func ParseFormToConfig(form map[string][]string, outputPath string) (*Config, error) {
 	config := NewDefaultConfig()
 	// Unchecked checkboxes do not appear in the form data.
 	config.RotateUserAgents = false
@@ -139,6 +139,6 @@ func ParseFormToConfig(form map[string][]string) (*Config, error) {
 		}
 		config.PermittedDomains[0] = url
 	}
-
+	config.SqlitePath = outputPath
 	return config, nil
 }

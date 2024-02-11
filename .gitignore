@@ -1,13 +1,14 @@
-crawl_results.db
-dev_env
-build
-DataProcessor.egg-info
+# Directories
 __pycache__
 .pytest_cache
-html/network.html
-lib
+build
+DataProcessor.egg-info
+dev_env
 dist
-results.db
-pkg/data-crawler/config.json
+lib
 test-sites
+user/
+
+# Configurations
 .env
+pkg/data-crawler/config.json

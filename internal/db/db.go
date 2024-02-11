@@ -17,8 +17,8 @@ type Database interface {
 	GetRecentVisited() ([]Visited, error)
 }
 
-func ConnectSqlite() *sql.DB {
-	db, err := sql.Open("sqlite3", "pkg/data-crawler/results.db")
+func ConnectSqlite(filePath string) *sql.DB {
+	db, err := sql.Open("sqlite3", filePath)
 	if err != nil {
 		log.Default().Println(err)
 		return nil
