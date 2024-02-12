@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -358,6 +359,51 @@ func (m *CrawlMaster) HandleFinishedCrawlers() {
 			}
 		}()
 	}
+}
+
+func (m *CrawlMaster) ResourceManger() http.HandlerFunc {
+	for {
+		func() {
+			active_users := m.GetRecentlyActiveUsers()
+			for _, path := range []string{"user/data-crawler", "user/network", "user/config"} {
+				files, err := os.ReadDir(path)
+				if err != nil {
+					log.Default().Println(err)
+					return
+				}
+				for _, file := range files {
+					if len(file.Name()) > 0 {
+						id := ""
+						if path == "user/data-crawler" {
+							id = strings.TrimPrefix(strings.TrimSuffix(file.Name(), ".db"), "results_")
+						} else if path == "user/network" {
+							id = strings.TrimPrefix(strings.TrimSuffix(file.Name(), ".html"), "network_")
+						} else if path == "user/config" {
+							id = strings.TrimPrefix(strings.TrimSuffix(file.Name(), ".json"), "config_")
+						}
+						if _, ok := active_users[id]; !ok {
+							err := os.Remove(fmt.Sprintf("%s/%s", path, file.Name()))
+							if err != nil {
+								log.Default().Println(err)
+							}
+						}
+					}
+				}
+			}
+		}()
+		time.Sleep(1 * time.Minute)
+	}
+}
+
+func (m *CrawlMaster) GetRecentlyActiveUsers() map[string]bool {
+	m.RLock()
+	defer m.RUnlock()
+	active_users := make(map[string]bool)
+	for _, crawler := range m.ActiveManagers {
+		active_users[crawler.UserID] = true
+	}
+	// TODO: Support users who have been active in the last 3 days
+	return active_users
 }
 
 func (m *CrawlMaster) DismissToastHandler() http.HandlerFunc {

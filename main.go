@@ -17,10 +17,6 @@ func main() {
 	// Handle any required environment variables
 	checkRequiredEnvs()
 
-	// Initialize router and middleware
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-
 	// Connect Redis
 	redis, err := db.ConnectRedis()
 	if err != nil {
@@ -32,18 +28,23 @@ func main() {
 		log.Fatal("Failed to Connect to Master PG: " + err.Error())
 	}
 
+	// Initialize crawl master, which will manage all crawl users
 	crawlMaster := routes.CrawlMaster{
 		ActiveManagers: make(map[string]*routes.CrawlManager),
 		DB:             db,
 		Redis:          redis,
 	}
 
+	// Initialize router and middleware
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
 	// Define routes
 	defineRoutes(r, &crawlMaster)
 
 	// Handle any finished crawlers
 	go crawlMaster.HandleFinishedCrawlers()
-	// TODO: Clean up any resources from old crawl managers.
+	go crawlMaster.ResourceManger()
 
 	// Start server
 	http.ListenAndServe(":8080", r)
