@@ -88,8 +88,19 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 }
 
 func checkRequiredEnvs() {
-	secret := os.Getenv("JWT_SECRET_TOKEN")
-	if secret == "" {
-		log.Fatal("JWT_SECRET_TOKEN is not set")
+	envs := []string{
+		"JWT_SECRET_TOKEN",
+		"REDIS_HOST",
+		"REDIS_PORT",
+		"POSTGRES_USER",
+		"POSTGRES_PASSWORD",
+		"POSTGRES_DB",
+		"POSTGRES_HOST",
+		"POSTGRES_PORT",
+	}
+	for _, env := range envs {
+		if value := os.Getenv(env); value == "" {
+			log.Fatalf("%s environment variable is not set", env)
+		}
 	}
 }
