@@ -47,6 +47,7 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Get("/recent-urls", crawlMaster.RecentURLsHandler())
 	r.Get("/export", crawlMaster.ExportDB())
 	r.Get("/dismiss-toast", crawlMaster.DismissToastHandler())
+	r.Post("/about-modal", crawlMaster.AboutModalHandler())
 
 	// Ensure that the user has been assigned, and is using a valid JWT
 	r.Post("/ensure-jwt", crawlMaster.EnsureJWTHandler())

@@ -21,11 +21,14 @@
             <h1 class="text-white text-lg font-semibold" style="font-family: 'Roboto', sans-serif; font-weight: 300;">Data Manager</h1>
         </div>
         <div class="flex">
-            <button class="ml-2 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">About</button>
+            <button hx-post="/about-modal" hx-target="#aboutModal" class="ml-2 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">About</button>
             <button class="ml-2 mr-4 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">Login</button>
         </div>
     </header>
     <div class="bg-gray-900 text-white text-center pt-10 pb-4 px-4 border-t-4 border-gray-600">
+        <div class="flex justify-center">
+            <div id="aboutModal"></div>
+        </div>
         <h1 class="text-2xl font-bold mb-2">Welcome to Data Manager</h1>
         <p class="text-sm mb-2">Navigate the internet, analyze content, metadata, and website structure.</p>
         <p class="text-sm">Enter the URL below and press "Start Crawling"</p>

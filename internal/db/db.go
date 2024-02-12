@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -61,5 +62,13 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("could not iterate sqlite: %v", err)
 	}
+
+	sort.Slice(visiteds, func(i, j int) bool {
+		if visiteds[i].LastVisitedAt.Equal(visiteds[j].LastVisitedAt) {
+			return visiteds[i].ID > visiteds[j].ID
+		}
+		return visiteds[i].LastVisitedAt.After(visiteds[j].LastVisitedAt)
+	})
+
 	return visiteds, nil
 }

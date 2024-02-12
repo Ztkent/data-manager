@@ -362,6 +362,24 @@ func (m *CrawlMaster) DismissToastHandler() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlMaster) AboutModalHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("close") == "true" {
+			return
+		}
+
+		tmpl, err := template.ParseFiles("html/templates/about_modal.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func (m *CrawlMaster) EnsureJWTHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, err := r.Cookie("jwt")
