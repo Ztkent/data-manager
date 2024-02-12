@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Ztkent/data-manager/internal/db"
 	"github.com/Ztkent/data-manager/internal/routes"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -20,8 +21,21 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
+	// Connect Redis
+	redis, err := db.ConnectRedis()
+	if err != nil {
+		log.Fatal("Failed to Connect to Redis: " + err.Error())
+	}
+	// Connect Master PG
+	db, err := db.ConnectPostgres()
+	if err != nil {
+		log.Fatal("Failed to Connect to Master PG: " + err.Error())
+	}
+
 	crawlMaster := routes.CrawlMaster{
 		ActiveManagers: make(map[string]*routes.CrawlManager),
+		DB:             db,
+		Redis:          redis,
 	}
 
 	// Define routes

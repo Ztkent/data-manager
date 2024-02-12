@@ -1,20 +1,27 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/go-redis/redis/v8"
+	_ "github.com/lib/pq"           // PostgreSQL driver
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
 type database struct {
 	db *sql.DB
 }
 
-type Database interface {
+type MasterDatabase interface {
+}
+
+type ManagerDatabase interface {
 	GetRecentVisited() ([]Visited, error)
 }
 
@@ -27,7 +34,7 @@ func ConnectSqlite(filePath string) *sql.DB {
 	return db
 }
 
-func NewDatabase(db *sql.DB) Database {
+func NewManagerDatabase(db *sql.DB) ManagerDatabase {
 	return &database{db: db}
 }
 
@@ -71,4 +78,54 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 	})
 
 	return visiteds, nil
+}
+
+func ConnectRedis() (*redis.Client, error) {
+	// Get the Redis connection details from the environment variables
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisUser := os.Getenv("REDIS_USER")
+
+	// Connect to the Redis instance
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisHost + ":" + redisPort,
+		Username: redisUser,
+		DB:       0,
+	})
+
+	// Test the connection
+	ctx5, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := client.Ping(ctx5).Result()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+func ConnectPostgres() (*sql.DB, error) {
+	// Get the PostgreSQL connection details from the environment variables
+	postgresHost := os.Getenv("POSTGRES_HOST")
+	postgresPort := os.Getenv("POSTGRES_PORT")
+	postgresUser := os.Getenv("POSTGRES_USER")
+	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
+	postgresDB := os.Getenv("POSTGRES_DB")
+
+	// Create the connection string
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		postgresHost, postgresPort, postgresUser, postgresPassword, postgresDB)
+
+	// Connect to the PostgreSQL instance
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Test the connection
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }

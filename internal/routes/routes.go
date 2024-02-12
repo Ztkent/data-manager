@@ -15,11 +15,14 @@ import (
 
 	"github.com/Ztkent/data-manager/internal/config"
 	"github.com/Ztkent/data-manager/internal/db"
+	"github.com/go-redis/redis/v8"
 )
 
 // Manage all users
 type CrawlMaster struct {
 	ActiveManagers map[string]*CrawlManager
+	DB             db.MasterDatabase
+	Redis          *redis.Client
 	sync.RWMutex
 }
 
@@ -28,7 +31,7 @@ type CrawlManager struct {
 	UserID    string
 	CrawlMap  map[string]context.CancelFunc
 	CrawlChan chan string
-	SqliteDB  db.Database
+	SqliteDB  db.ManagerDatabase
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
 	sync.RWMutex
@@ -88,7 +91,7 @@ func (m *CrawlMaster) GetCrawlManagerForRequest(r *http.Request) (*CrawlManager,
 				CreatedAt: &now,
 				UpdatedAt: &now,
 			}
-			crawlManager.SqliteDB = db.NewDatabase(db.ConnectSqlite(crawlManager.GetDBPath()))
+			crawlManager.SqliteDB = db.NewManagerDatabase(db.ConnectSqlite(crawlManager.GetDBPath()))
 
 			m.Lock()
 			m.ActiveManagers[jwt.Value] = crawlManager
