@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"io/fs"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -23,15 +24,6 @@ type MasterDatabase interface {
 
 type ManagerDatabase interface {
 	GetRecentVisited() ([]Visited, error)
-}
-
-func ConnectSqlite(filePath string) *sql.DB {
-	db, err := sql.Open("sqlite3", filePath)
-	if err != nil {
-		log.Default().Println(err)
-		return nil
-	}
-	return db
 }
 
 func NewManagerDatabase(db *sql.DB) ManagerDatabase {
@@ -78,6 +70,14 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 	})
 
 	return visiteds, nil
+}
+
+func ConnectSqlite(filePath string) *sql.DB {
+	db, err := sql.Open("sqlite3", filePath)
+	if err != nil {
+		return nil
+	}
+	return db
 }
 
 func ConnectRedis() (*redis.Client, error) {
@@ -127,5 +127,44 @@ func ConnectPostgres() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Run the migrations
+	err = RunMigrations(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
+}
+
+func RunMigrations(db *sql.DB) error {
+	// Read the migration directory
+	files, err := os.ReadDir("internal/migration")
+	if err != nil {
+		return err
+	}
+
+	// Filter and sort the files
+	sqlFiles := make([]fs.DirEntry, 0)
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".sql") {
+			sqlFiles = append(sqlFiles, file)
+		}
+	}
+	sort.Slice(sqlFiles, func(i, j int) bool {
+		return sqlFiles[i].Name() < sqlFiles[j].Name()
+	})
+
+	// Execute each file as a SQL script
+	for _, file := range sqlFiles {
+		data, err := os.ReadFile("internal/migration/" + file.Name())
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec(string(data))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

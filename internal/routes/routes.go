@@ -104,7 +104,7 @@ func (m *CrawlMaster) GetCrawlManagerForRequest(r *http.Request) (*CrawlManager,
 
 func (m *CrawlMaster) ServeHome() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "html/home.html")
+		http.ServeFile(w, r, "internal/html/home.html")
 	}
 }
 
@@ -142,7 +142,7 @@ func (m *CrawlMaster) GenNetwork() http.HandlerFunc {
 			return
 		}
 		// Render the active_crawlers template, which displays the active crawlers
-		tmpl, err := template.ParseFiles("html/templates/network_iframe.gohtml")
+		tmpl, err := template.ParseFiles("internal/html/templates/network_iframe.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -305,7 +305,7 @@ func (m *CrawlMaster) ActiveCrawlersHandler() http.HandlerFunc {
 		})
 
 		// Render the active_crawlers template, which displays the active crawlers
-		tmpl, err := template.ParseFiles("html/templates/active_crawlers.gohtml")
+		tmpl, err := template.ParseFiles("internal/html/templates/active_crawlers.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -329,7 +329,7 @@ func (m *CrawlMaster) RecentURLsHandler() http.HandlerFunc {
 			log.Default().Println(err)
 			return
 		}
-		tmpl, err := template.ParseFiles("html/templates/recent_visited.gohtml")
+		tmpl, err := template.ParseFiles("internal/html/templates/recent_visited.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -417,7 +417,7 @@ func (m *CrawlMaster) AboutModalHandler() http.HandlerFunc {
 			return
 		}
 
-		tmpl, err := template.ParseFiles("html/templates/about_modal.gohtml")
+		tmpl, err := template.ParseFiles("internal/html/templates/about_modal.gohtml")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

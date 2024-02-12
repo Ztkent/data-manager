@@ -69,7 +69,7 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 
 	// Serve static files
 	workDir, _ := os.Getwd()
-	filesDir := filepath.Join(workDir, "html", "img")
+	filesDir := filepath.Join(workDir, "internal", "html", "img")
 	FileServer(r, "/img", http.Dir(filesDir))
 	FileServer(r, "/favicon.ico", http.Dir(filesDir))
 }
