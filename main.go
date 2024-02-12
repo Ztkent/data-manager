@@ -51,7 +51,14 @@ func main() {
 }
 
 func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
+	// Auth
+	r.Post("/ensure-jwt", crawlMaster.EnsureJWTHandler())
+	r.Post("/login", crawlMaster.Login())
+	r.Post("/logout", crawlMaster.Logout())
+
+	// Service
 	r.Get("/", crawlMaster.ServeHome())
+	r.Get("/tc", crawlMaster.ServeTC())
 	r.Get("/network", crawlMaster.ServeNetwork())
 	r.Post("/gen-network", crawlMaster.GenNetwork())
 	r.Post("/crawl", crawlMaster.CrawlHandler())
@@ -63,9 +70,6 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Get("/export", crawlMaster.ExportDB())
 	r.Get("/dismiss-toast", crawlMaster.DismissToastHandler())
 	r.Post("/about-modal", crawlMaster.AboutModalHandler())
-
-	// Ensure that the user has been assigned, and is using a valid JWT
-	r.Post("/ensure-jwt", crawlMaster.EnsureJWTHandler())
 
 	// Serve static files
 	workDir, _ := os.Getwd()

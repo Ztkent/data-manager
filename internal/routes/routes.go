@@ -108,6 +108,59 @@ func (m *CrawlMaster) ServeHome() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlMaster) ServeTC() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "internal/html/tc.html")
+	}
+}
+
+func (m *CrawlMaster) Login() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("close") == "true" {
+			// Close the modal
+			return
+		} else if r.URL.Query().Get("register") == "true" {
+			// Render the register template
+			tmpl, err := template.ParseFiles("internal/html/templates/register_modal.gohtml")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = tmpl.Execute(w, nil)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		// Render the login template
+		tmpl, err := template.ParseFiles("internal/html/templates/login_modal.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (m *CrawlMaster) Logout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Render the active_crawlers template, which displays the active crawlers
+		tmpl, err := template.ParseFiles("internal/html/templates/login_button.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func (m *CrawlMaster) ServeNetwork() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
