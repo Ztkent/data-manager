@@ -19,7 +19,5 @@ It offers a convenient way to quickly crawl and collect recent web data for data
 
 // TODO: 
 - add collected files tab
-- assign every vistor a unique id, and track it in seperate db
-- add login modal
-- login is signup for new users
 - cleanup, remove and files for users not active in db for 3 days
+- require login for crawl/random/export/visualize

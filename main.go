@@ -52,11 +52,12 @@ func main() {
 
 func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	// Auth
-	r.Post("/ensure-jwt", crawlMaster.EnsureJWTHandler())
+	r.Post("/ensure-uuid", crawlMaster.EnsureUUIDHandler())
 	r.Post("/login", crawlMaster.Login())
 	r.Post("/logout", crawlMaster.Logout())
 	r.Post("/submit-register", crawlMaster.SubmitRegister())
 	r.Post("/submit-login", crawlMaster.SubmitLogin())
+	r.Post("/confirm-login", crawlMaster.ConfirmLogin())
 
 	// Service
 	r.Get("/", crawlMaster.ServeHome())

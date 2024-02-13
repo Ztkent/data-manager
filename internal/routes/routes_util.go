@@ -13,24 +13,11 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
-	"github.com/golang-jwt/jwt"
 )
 
 type Toast struct {
 	ToastContent string
 	Border       string
-}
-
-func generateJWT() (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN")))
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
 }
 
 func validatePassword(password string, repeatPass string) (bool, string) {
@@ -144,19 +131,26 @@ func serveSuccessToast(w http.ResponseWriter, message string) {
 }
 
 func getRequestCookie(r *http.Request, name string) (string, error) {
-	var id string
 	cookie, err := r.Cookie(name)
 	if err == http.ErrNoCookie {
 		return "", fmt.Errorf("Cookie not found")
-	} else if err != nil {
-		id, err = generateJWT()
-		if err != nil {
-			return "", err
-		}
-	} else {
-		id = cookie.Value
 	}
-	return id, nil
+	return cookie.Value, nil
+}
+
+func clearCookies(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    "uuid",
+		Value:   "",
+		Expires: time.Unix(0, 0),
+		Path:    "/",
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:    "session_token",
+		Value:   "",
+		Expires: time.Unix(0, 0),
+		Path:    "/",
+	})
 }
 
 func logForm(r *http.Request) {

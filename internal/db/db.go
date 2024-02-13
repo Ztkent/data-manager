@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
@@ -58,9 +59,16 @@ func (db *database) CreateUser(userID, email, password string) error {
         VALUES ($1, $2, $3, NOW(), NOW())
     `, userID, email, hashedPassword)
 	if err != nil {
-		return fmt.Errorf("could not create user: %v", err)
+		// if users want to create a second account while we have a cookie active, we need to generate a new user_id
+		if strings.Contains(err.Error(), "users_user_id_key") {
+			userID = uuid.New().String()
+		}
+		_, err = db.db.Exec(`
+        INSERT INTO users (user_id, email, password, created_at, updated_at)
+        VALUES ($1, $2, $3, NOW(), NOW())
+    `, userID, email, hashedPassword)
 	}
-	return nil
+	return err
 }
 
 func (db *database) LoginUser(email, password string) (string, string, error) {
@@ -78,7 +86,12 @@ func (db *database) LoginUser(email, password string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("could not compare password: %v", err)
 	}
-	token := uuid.New().String()
+
+	token, err := generateJWT()
+	if err != nil {
+		return "", "", fmt.Errorf("could not generate JWT: %v", err)
+	}
+
 	err = db.UpdateUserAuth(userId, token)
 	if err != nil {
 		return "", "", fmt.Errorf("could not update user auth: %v", err)
@@ -86,14 +99,15 @@ func (db *database) LoginUser(email, password string) (string, string, error) {
 	return userId, token, nil
 }
 
-func (db *database) UpdateUserAuth(userId string, token string) error {
+func (db *database) UpdateUserAuth(userID, token string) error {
 	_, err := db.db.Exec(`
-        UPDATE auth
-        SET token = $2, updated_at = NOW()
-        WHERE user_id = $1
-    `, userId, token)
+        INSERT INTO auth (user_id, session_token, created_at, updated_at)
+        VALUES ($1, $2, NOW(), NOW())
+        ON CONFLICT (user_id) DO UPDATE 
+        SET session_token = $2, updated_at = NOW()
+    `, userID, token)
 	if err != nil {
-		return fmt.Errorf("could not update user auth: %v", err)
+		return fmt.Errorf("could not upsert user auth: %v", err)
 	}
 	return nil
 }
@@ -226,4 +240,15 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func generateJWT() (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_TOKEN")))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }

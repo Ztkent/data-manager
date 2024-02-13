@@ -17,6 +17,7 @@ import (
 	"github.com/Ztkent/data-manager/internal/config"
 	"github.com/Ztkent/data-manager/internal/db"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 )
 
 // Manage all users
@@ -71,22 +72,22 @@ func (m *CrawlManager) StartCrawlerWithConfig(ctx context.Context, curr_config *
 
 // Crawl Master
 func (m *CrawlMaster) GetCrawlManagerForRequest(r *http.Request) (*CrawlManager, error) {
-	jwt, err := r.Cookie("jwt")
+	uuid, err := r.Cookie("uuid")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get JWT from request")
+		return nil, fmt.Errorf("Failed to get UUID from request")
 	}
 
 	// Get the crawl manager for the user
 	var crawlManager *CrawlManager
 	m.RLock()
-	crawlManager = m.ActiveManagers[jwt.Value]
+	crawlManager = m.ActiveManagers[uuid.Value]
 	m.RUnlock()
 
 	if crawlManager == nil {
 		if crawlManager == nil {
 			now := time.Now()
 			crawlManager = &CrawlManager{
-				UserID:    jwt.Value,
+				UserID:    uuid.Value,
 				CrawlMap:  make(map[string]context.CancelFunc),
 				CrawlChan: make(chan string),
 				CreatedAt: &now,
@@ -95,7 +96,7 @@ func (m *CrawlMaster) GetCrawlManagerForRequest(r *http.Request) (*CrawlManager,
 			crawlManager.SqliteDB = db.NewManagerDatabase(db.ConnectSqlite(crawlManager.GetDBPath()))
 
 			m.Lock()
-			m.ActiveManagers[jwt.Value] = crawlManager
+			m.ActiveManagers[uuid.Value] = crawlManager
 			m.Unlock()
 		}
 	}
@@ -145,7 +146,20 @@ func (m *CrawlMaster) Login() http.HandlerFunc {
 		}
 	}
 }
-
+func (m *CrawlMaster) ConfirmLogin() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Render the logout button if the user is logged in
+		tmpl, err := template.ParseFiles("internal/html/templates/logout_button.gohtml")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
 func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
@@ -174,20 +188,24 @@ func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 
 		// Set the correct cookies for a logged-in user
 		http.SetCookie(w, &http.Cookie{
-			Name:     "jwt",
+			Name:     "uuid",
 			Value:    userId,
 			HttpOnly: true,
 			Secure:   false, // Set to true if your site uses HTTPS
 			SameSite: http.SameSiteStrictMode,
 		})
 		http.SetCookie(w, &http.Cookie{
-			Name:     "token",
+			Name:     "session_token",
 			Value:    token,
 			HttpOnly: true,
 			Secure:   false, // Set to true if your site uses HTTPS
 			SameSite: http.SameSiteStrictMode,
 		})
+
+		// return hx-post targeting the login button to change it to a logout button
+		w.Write([]byte(`<div id="confirmLogin" hx-post="/confirm-login" hx-trigger="load" hx-target="#logDiv"> </div>`))
 		return
+
 	}
 }
 
@@ -211,9 +229,9 @@ func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
 			return
 		}
 
-		id, err := getRequestCookie(r, "jwt")
+		id, err := getRequestCookie(r, "uuid")
 		if err != nil {
-			http.Error(w, "Failed to get JWT", http.StatusInternalServerError)
+			http.Error(w, "Failed to get UUID", http.StatusInternalServerError)
 			return
 		}
 
@@ -223,11 +241,16 @@ func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
 			// TODO: return the login modal with the error message
 			return
 		}
+
+		// Log the user in
+		m.SubmitLogin()(w, r)
 	}
 }
 
 func (m *CrawlMaster) Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Remove the cookies
+		clearCookies(w)
 		// Render the active_crawlers template, which displays the active crawlers
 		tmpl, err := template.ParseFiles("internal/html/templates/login_button.gohtml")
 		if err != nil {
@@ -562,19 +585,15 @@ func (m *CrawlMaster) AboutModalHandler() http.HandlerFunc {
 	}
 }
 
-func (m *CrawlMaster) EnsureJWTHandler() http.HandlerFunc {
+func (m *CrawlMaster) EnsureUUIDHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := r.Cookie("jwt")
+		_, err := r.Cookie("uuid")
 		if err == http.ErrNoCookie {
 			// Cookie does not exist, set it
-			jwt, err := generateJWT()
-			if err != nil {
-				http.Error(w, "Failed to generate JWT", http.StatusInternalServerError)
-				return
-			}
+			token := uuid.New().String()
 			http.SetCookie(w, &http.Cookie{
-				Name:     "jwt",
-				Value:    jwt,
+				Name:     "uuid",
+				Value:    token,
 				HttpOnly: true,
 				Secure:   false, // Set to true if your site uses HTTPS
 				SameSite: http.SameSiteStrictMode,
