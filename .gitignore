@@ -11,3 +11,6 @@ user/
 
 # Configurations
 .env
+
+# Binaries
+pkg/data-crawler/data-crawler

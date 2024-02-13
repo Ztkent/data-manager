@@ -146,7 +146,7 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 }
 
 func ConnectSqlite(filePath string) *sql.DB {
-	db, err := sql.Open("sqlite3", filePath)
+	db, err := connectWithBackoff("sqlite3", filePath, 3)
 	if err != nil {
 		return nil
 	}
@@ -189,11 +189,10 @@ func ConnectPostgres() (*sql.DB, error) {
 		postgresHost, postgresPort, postgresUser, postgresPassword, postgresDB)
 
 	// Connect to the PostgreSQL instance
-	db, err := sql.Open("postgres", connStr)
+	db, err := connectWithBackoff("postgres", connStr, 3)
 	if err != nil {
 		return nil, err
 	}
-
 	// Test the connection
 	err = db.Ping()
 	if err != nil {
@@ -251,4 +250,25 @@ func generateJWT() (string, error) {
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func connectWithBackoff(driver string, connStr string, maxRetries int) (*sql.DB, error) {
+	var db *sql.DB
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		db, err = sql.Open(driver, connStr)
+		if err != nil {
+			fmt.Println("Failed attempt to connect to " + driver + ": " + err.Error())
+			time.Sleep(time.Duration(i+1) * (3 * time.Second))
+			continue
+		}
+		err = db.Ping()
+		if err != nil {
+			fmt.Println("Failed attempt to connect to " + driver + ": " + err.Error())
+			time.Sleep(time.Duration(i+1) * (3 * time.Second))
+			continue
+		}
+		return db, nil
+	}
+	return nil, err
 }

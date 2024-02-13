@@ -59,7 +59,7 @@ func (m *CrawlManager) StartCrawlerWithConfig(ctx context.Context, curr_config *
 	}
 	path := config.WriteJsonToFile(json, m.GetConfigPath())
 	go func() {
-		cmd := exec.CommandContext(ctx, "./pkg/data-crawler/v0.1.0/data-crawler", "-c", path)
+		cmd := exec.CommandContext(ctx, "./pkg/data-crawler/data-crawler", "-c", path)
 		err := cmd.Run()
 		if err != nil {
 			fmt.Println(err)
