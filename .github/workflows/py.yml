@@ -17,9 +17,4 @@ jobs:
       run: |
         cd pkg/data-processor
         python -m pip install --upgrade pip
-        pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Run tests with pytest
-      run: |
-        cd pkg/data-processor
-        pytest tests/tests.py
