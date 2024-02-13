@@ -13,8 +13,7 @@ RUN ls -la
 
 # Install Python, Rust, and OpenSSL
 RUN apt-get update && \
-    apt-get install -y python3 \
-    apt-get install -y curl pkg-config libssl-dev && \
+    apt-get install -y curl pkg-config libssl-dev python3 python3-pip && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 # Add Rust to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
@@ -33,6 +32,9 @@ RUN ls -la
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 RUN ls -la
+
+# Install Python dependencies
+RUN pip3 install -r /app/pkg/data-processor/requirements.txt --break-system-packages
 
 # Build the Rust app
 WORKDIR /app/data-crawler
