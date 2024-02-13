@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	"golang.org/x/crypto/bcrypt"
 )
 
 type database struct {
@@ -20,6 +22,9 @@ type database struct {
 }
 
 type MasterDatabase interface {
+	CreateUser(userID, email, password string) error
+	LoginUser(email, password string) (string, string, error)
+	UpdateUserAuth(userID, token string) error
 }
 
 type ManagerDatabase interface {
@@ -30,6 +35,10 @@ func NewManagerDatabase(db *sql.DB) ManagerDatabase {
 	return &database{db: db}
 }
 
+func NewMasterDatabase(db *sql.DB) MasterDatabase {
+	return &database{db: db}
+}
+
 type Visited struct {
 	ID            int
 	URL           string
@@ -37,6 +46,56 @@ type Visited struct {
 	LastVisitedAt time.Time
 	IsComplete    bool
 	IsBlocked     bool
+}
+
+func (db *database) CreateUser(userID, email, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("could not hash password: %v", err)
+	}
+	_, err = db.db.Exec(`
+        INSERT INTO users (user_id, email, password, created_at, updated_at)
+        VALUES ($1, $2, $3, NOW(), NOW())
+    `, userID, email, hashedPassword)
+	if err != nil {
+		return fmt.Errorf("could not create user: %v", err)
+	}
+	return nil
+}
+
+func (db *database) LoginUser(email, password string) (string, string, error) {
+	var userId string
+	var hashedPassword string
+	err := db.db.QueryRow(`
+		SELECT user_id, password
+		FROM users
+		WHERE email = $1
+	`, email).Scan(&userId, &hashedPassword)
+	if err != nil {
+		return "", "", fmt.Errorf("could not find user: %v", err)
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return "", "", fmt.Errorf("could not compare password: %v", err)
+	}
+	token := uuid.New().String()
+	err = db.UpdateUserAuth(userId, token)
+	if err != nil {
+		return "", "", fmt.Errorf("could not update user auth: %v", err)
+	}
+	return userId, token, nil
+}
+
+func (db *database) UpdateUserAuth(userId string, token string) error {
+	_, err := db.db.Exec(`
+        UPDATE auth
+        SET token = $2, updated_at = NOW()
+        WHERE user_id = $1
+    `, userId, token)
+	if err != nil {
+		return fmt.Errorf("could not update user auth: %v", err)
+	}
+	return nil
 }
 
 func (db *database) GetRecentVisited() ([]Visited, error) {

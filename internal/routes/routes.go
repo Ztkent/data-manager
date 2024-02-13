@@ -146,6 +146,86 @@ func (m *CrawlMaster) Login() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		email := r.FormValue("email")
+		pass := r.FormValue("password")
+
+		// Validate the email and password
+		valid := validateEmail(email)
+		if !valid {
+			http.Error(w, "Invalid email", http.StatusBadRequest)
+			// TODO: return the login modal with the error message
+			return
+		}
+		validPass, reason := validatePassword(pass, pass)
+		if !validPass {
+			http.Error(w, reason, http.StatusBadRequest)
+			// TODO: return the login modal with the error message
+			return
+		}
+		userId, token, err := m.DB.LoginUser(email, pass)
+		if err != nil {
+			http.Error(w, "Login Failed", http.StatusInternalServerError)
+			// TODO: return the login modal with the error message
+			return
+		}
+
+		// Set the correct cookies for a logged-in user
+		http.SetCookie(w, &http.Cookie{
+			Name:     "jwt",
+			Value:    userId,
+			HttpOnly: true,
+			Secure:   false, // Set to true if your site uses HTTPS
+			SameSite: http.SameSiteStrictMode,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    token,
+			HttpOnly: true,
+			Secure:   false, // Set to true if your site uses HTTPS
+			SameSite: http.SameSiteStrictMode,
+		})
+		return
+	}
+}
+
+func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		email := r.FormValue("email")
+		pass := r.FormValue("password")
+		repeatPass := r.FormValue("repeat-password")
+		// Validate the email and password
+		valid := validateEmail(email)
+		if !valid {
+			http.Error(w, "Invalid email", http.StatusBadRequest)
+			// TODO: return the login modal with the error message
+			return
+		}
+		validPass, reason := validatePassword(pass, repeatPass)
+		if !validPass {
+			http.Error(w, reason, http.StatusBadRequest)
+			// TODO: return the login modal with the error message
+			return
+		}
+
+		id, err := getRequestCookie(r, "jwt")
+		if err != nil {
+			http.Error(w, "Failed to get JWT", http.StatusInternalServerError)
+			return
+		}
+
+		err = m.DB.CreateUser(id, email, pass)
+		if err != nil {
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			// TODO: return the login modal with the error message
+			return
+		}
+	}
+}
+
 func (m *CrawlMaster) Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Render the active_crawlers template, which displays the active crawlers

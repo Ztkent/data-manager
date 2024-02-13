@@ -2,6 +2,7 @@ package routes
 
 import (
 	"bufio"
+	"fmt"
 	"html/template"
 	"log"
 	"math/rand"
@@ -11,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -29,6 +31,45 @@ func generateJWT() (string, error) {
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func validatePassword(password string, repeatPass string) (bool, string) {
+	if password != repeatPass {
+		return false, "Passwords do not match."
+	}
+	if len(password) < 8 {
+		return false, "Password must be at least 8 characters long."
+	}
+	hasUppercase := false
+	hasLowercase := false
+	hasNumber := false
+
+	for _, char := range password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUppercase = true
+		case unicode.IsLower(char):
+			hasLowercase = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		}
+	}
+	if !hasUppercase {
+		return false, "Password must contain at least one uppercase letter."
+	}
+	if !hasLowercase {
+		return false, "Password must contain at least one lowercase letter."
+	}
+	if !hasNumber {
+		return false, "Password must contain at least one number."
+	}
+	return true, ""
+}
+
+func validateEmail(email string) bool {
+	emailRegex := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
+	validEmail := regexp.MustCompile(emailRegex)
+	return validEmail.MatchString(email)
 }
 
 func selectRandomUrl() (string, error) {
@@ -100,6 +141,22 @@ func serveSuccessToast(w http.ResponseWriter, message string) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	return
+}
+
+func getRequestCookie(r *http.Request, name string) (string, error) {
+	var id string
+	cookie, err := r.Cookie(name)
+	if err == http.ErrNoCookie {
+		return "", fmt.Errorf("Cookie not found")
+	} else if err != nil {
+		id, err = generateJWT()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		id = cookie.Value
+	}
+	return id, nil
 }
 
 func logForm(r *http.Request) {

@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("Failed to Connect to Redis: " + err.Error())
 	}
 	// Connect Master PG
-	db, err := db.ConnectPostgres()
+	pgDB, err := db.ConnectPostgres()
 	if err != nil {
 		log.Fatal("Failed to Connect to Master PG: " + err.Error())
 	}
@@ -31,7 +31,7 @@ func main() {
 	// Initialize crawl master, which will manage all crawl users
 	crawlMaster := routes.CrawlMaster{
 		ActiveManagers: make(map[string]*routes.CrawlManager),
-		DB:             db,
+		DB:             db.NewMasterDatabase(pgDB),
 		Redis:          redis,
 	}
 
@@ -55,6 +55,8 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Post("/ensure-jwt", crawlMaster.EnsureJWTHandler())
 	r.Post("/login", crawlMaster.Login())
 	r.Post("/logout", crawlMaster.Logout())
+	r.Post("/submit-register", crawlMaster.SubmitRegister())
+	r.Post("/submit-login", crawlMaster.SubmitLogin())
 
 	// Service
 	r.Get("/", crawlMaster.ServeHome())
