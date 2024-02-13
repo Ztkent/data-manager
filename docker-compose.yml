@@ -9,6 +9,7 @@ services:
     profiles:
       - db
       - app
+      - remote-app
   postgres:
     image: postgres
     env_file:
@@ -22,6 +23,26 @@ services:
     profiles:
       - db
       - app
+      - remote-app
+  remote-app:
+    image: ghcr.io/ztkent/data-manager/data-manager:0.0.1
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_SECRET_TOKEN=${JWT_SECRET_TOKEN}
+      - REDIS_HOST=${REDIS_DOCKER_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_DOCKER_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - GHCR_TOKEN=${GHCR_TOKEN}
+    depends_on:
+      - postgres
+      - redis
+    profiles:
+      - remote-app
   app:
     build:
       context: .
@@ -39,6 +60,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_HOST=${POSTGRES_DOCKER_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
+      - GHCR_TOKEN=${GHCR_TOKEN}
     depends_on:
       - postgres
       - redis
