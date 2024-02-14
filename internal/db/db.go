@@ -50,6 +50,9 @@ type Visited struct {
 }
 
 func (db *database) CreateUser(userID, email, password string) error {
+	if db.db == nil {
+		return fmt.Errorf("database is nil")
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("could not hash password: %v", err)
@@ -72,6 +75,9 @@ func (db *database) CreateUser(userID, email, password string) error {
 }
 
 func (db *database) LoginUser(email, password string) (string, string, error) {
+	if db.db == nil {
+		return "", "", fmt.Errorf("database is nil")
+	}
 	var userId string
 	var hashedPassword string
 	err := db.db.QueryRow(`
@@ -100,6 +106,9 @@ func (db *database) LoginUser(email, password string) (string, string, error) {
 }
 
 func (db *database) UpdateUserAuth(userID, token string) error {
+	if db.db == nil {
+		return fmt.Errorf("database is nil")
+	}
 	_, err := db.db.Exec(`
         INSERT INTO auth (user_id, session_token, created_at, updated_at)
         VALUES ($1, $2, NOW(), NOW())
@@ -113,6 +122,9 @@ func (db *database) UpdateUserAuth(userID, token string) error {
 }
 
 func (db *database) GetRecentVisited() ([]Visited, error) {
+	if db.db == nil {
+		return nil, fmt.Errorf("database is nil")
+	}
 	rows, err := db.db.Query(`
         SELECT id, url, referrer, last_visited_at, is_complete, is_blocked
         FROM visited

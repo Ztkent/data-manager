@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -22,11 +23,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to Connect to Redis: " + err.Error())
 	}
+	fmt.Println("Successfully connected to Redis")
 	// Connect Master PG
 	pgDB, err := db.ConnectPostgres()
 	if err != nil {
 		log.Fatal("Failed to Connect to Master PG: " + err.Error())
 	}
+	fmt.Println("Successfully connected to PG")
 
 	// Initialize crawl master, which will manage all crawl users
 	crawlMaster := routes.CrawlMaster{
@@ -47,7 +50,8 @@ func main() {
 	go crawlMaster.ResourceManger()
 
 	// Start server
-	http.ListenAndServe(":8080", r)
+	fmt.Println("Server is running on port 8080")
+	log.Fatal(http.ListenAndServeTLS(":8080", os.Getenv("CERT_PATH"), os.Getenv("CERT_KEY_PATH"), r))
 }
 
 func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
@@ -105,6 +109,8 @@ func checkRequiredEnvs() {
 		"POSTGRES_DB",
 		"POSTGRES_HOST",
 		"POSTGRES_PORT",
+		"CERT_PATH",
+		"CERT_KEY_PATH",
 	}
 	for _, env := range envs {
 		if value := os.Getenv(env); value == "" {

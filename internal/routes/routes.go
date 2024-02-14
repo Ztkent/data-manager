@@ -191,14 +191,14 @@ func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 			Name:     "uuid",
 			Value:    userId,
 			HttpOnly: true,
-			Secure:   false, // Set to true if your site uses HTTPS
+			Secure:   true, // Set to true if your site uses HTTPS
 			SameSite: http.SameSiteStrictMode,
 		})
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
 			Value:    token,
 			HttpOnly: true,
-			Secure:   false, // Set to true if your site uses HTTPS
+			Secure:   true, // Set to true if your site uses HTTPS
 			SameSite: http.SameSiteStrictMode,
 		})
 
@@ -595,7 +595,7 @@ func (m *CrawlMaster) EnsureUUIDHandler() http.HandlerFunc {
 				Name:     "uuid",
 				Value:    token,
 				HttpOnly: true,
-				Secure:   false, // Set to true if your site uses HTTPS
+				Secure:   true, // Set to true if your site uses HTTPS
 				SameSite: http.SameSiteStrictMode,
 			})
 		} else if err != nil {

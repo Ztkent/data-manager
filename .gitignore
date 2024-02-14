@@ -14,3 +14,7 @@ user/
 
 # Binaries
 pkg/data-crawler/data-crawler
+.env-source
+data-manager
+cert.pem
+key.pem
