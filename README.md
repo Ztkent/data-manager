@@ -18,6 +18,8 @@ It offers a convenient way to quickly crawl and collect recent web data for data
 
 
 // TODO: 
+- require login for crawl/random/export/visualize
+- serve a strict robots.txt. Bing already found us. Likely the github ref link.
+- Fix the Cert. Its for ztkent.com, not data-manager.ztkent.com
 - add collected files tab
 - cleanup, remove and files for users not active in db for 3 days
-- require login for crawl/random/export/visualize
