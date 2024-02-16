@@ -153,8 +153,8 @@
             </ul>
         </div>
         <div class="relative mt-4 px-4 max-w-4xl mx-auto">
-            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="load, every 3s" class="tab-content overflow-auto"></div>
-            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="load, every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;"></div>
+            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="tab-content overflow-auto"></div>
+            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;"></div>
             <div id="networkTab" class="hidden tab-content overflow-auto">
                 <div class="flex justify-between items-center mb-4">
                     <h4 class="text-xl font-bold">Network Graph</h4>
