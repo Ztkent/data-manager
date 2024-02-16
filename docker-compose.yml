@@ -52,8 +52,12 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./cert.pem:/etc/nginx/cert.pem
-      - ./key.pem:/etc/nginx/key.pem
+      - ./certs/cert.pem:/etc/nginx/cert.pem
+      - ./certs/key.pem:/etc/nginx/key.pem
+      - ./certs/test_cert.pem:/etc/nginx/test_cert.pem
+      - ./certs/test_key.pem:/etc/nginx/test_key.pem
+      - ./certs/data-manager_cert.pem:/etc/nginx/data-manager_cert.pem
+      - ./certs/data-manager_key.pem:/etc/nginx/data-manager_key.pem
     ports:
       - 80:80
       - 443:443
