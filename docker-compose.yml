@@ -1,4 +1,7 @@
 version: '3.9'  # version 3.9 or later is required for profiles
+networks:
+  kent_network:
+    name: kent_network
 services:
   redis:
     image: redis
@@ -9,6 +12,8 @@ services:
     profiles:
       - db
       - app
+    networks:
+      - kent_network
   postgres:
     image: postgres
     env_file:
@@ -22,6 +27,8 @@ services:
     profiles:
       - db
       - app
+    networks:
+      - kent_network
   app:
     build:
       context: .
@@ -48,20 +55,5 @@ services:
       - redis
     profiles:
       - app
-  nginx:
-    image: nginx:latest
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./certs/cert.pem:/etc/nginx/cert.pem
-      - ./certs/key.pem:/etc/nginx/key.pem
-      - ./certs/test_cert.pem:/etc/nginx/test_cert.pem
-      - ./certs/test_key.pem:/etc/nginx/test_key.pem
-      - ./certs/data-manager_cert.pem:/etc/nginx/data-manager_cert.pem
-      - ./certs/data-manager_key.pem:/etc/nginx/data-manager_key.pem
-    ports:
-      - 80:80
-      - 443:443
-    depends_on:
-      - app
-    profiles:
-      - app
+    networks:
+      - kent_network
