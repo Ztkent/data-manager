@@ -173,18 +173,10 @@ func (m *CrawlMaster) ConfirmLogin(alert bool) http.HandlerFunc {
 func (m *CrawlMaster) ValidateLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Check if the user is logged in
-		uuidCookie, err := r.Cookie("uuid")
-		tokenCookie, err2 := r.Cookie("session_token")
-		if err == http.ErrNoCookie || err2 == http.ErrNoCookie {
-			http.Error(w, "User is not logged in", http.StatusUnauthorized)
-			return
-		} else if err != nil || err2 != nil {
-			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
-			return
-		}
-		err = m.DB.ConfirmUUIDandToken(uuidCookie.Value, tokenCookie.Value)
+		err := checkIfUserLoggedIn(r, w, m)
 		if err != nil {
-			http.Error(w, "Failed to confirm UUID and token", http.StatusInternalServerError)
+			// User is not logged in
+			http.Error(w, "User is not logged in", http.StatusUnauthorized)
 			return
 		}
 		m.ConfirmLogin(false)(w, r)
@@ -305,6 +297,11 @@ func (m *CrawlMaster) Logout() http.HandlerFunc {
 
 func (m *CrawlMaster) ServeNetwork() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			serveFailToast(w, "User is not logged in")
+			return
+		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -324,6 +321,11 @@ func (m *CrawlMaster) ServeNetwork() http.HandlerFunc {
 
 func (m *CrawlMaster) GenNetwork() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			serveFailToast(w, "User is not logged in")
+			return
+		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -356,6 +358,11 @@ func (m *CrawlMaster) GenNetwork() http.HandlerFunc {
 
 func (m *CrawlMaster) ExportDB() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -376,6 +383,12 @@ func (m *CrawlMaster) ExportDB() http.HandlerFunc {
 
 func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			serveFailToast(w, "User is not logged in")
+			return
+		}
+
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -416,6 +429,11 @@ func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 
 func (m *CrawlMaster) CrawlRandomHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			serveFailToast(w, "User is not logged in")
+			return
+		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -454,6 +472,11 @@ func (m *CrawlMaster) CrawlRandomHandler() http.HandlerFunc {
 
 func (m *CrawlMaster) KillAllCrawlersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			serveFailToast(w, "User is not logged in")
+			return
+		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -479,6 +502,11 @@ func (m *CrawlMaster) KillAllCrawlersHandler() http.HandlerFunc {
 
 func (m *CrawlMaster) KillCrawlerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			serveFailToast(w, "User is not logged in")
+			return
+		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
 			log.Default().Println(err)
@@ -630,11 +658,6 @@ func (m *CrawlMaster) GetRecentlyActiveUsers() map[string]bool {
 	return active_users
 }
 
-func (m *CrawlMaster) DismissToastHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-	}
-}
-
 func (m *CrawlMaster) AboutModalHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("close") == "true" {
@@ -670,5 +693,10 @@ func (m *CrawlMaster) EnsureUUIDHandler() http.HandlerFunc {
 			// Some other error occurred
 			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
 		}
+	}
+}
+
+func (m *CrawlMaster) DismissToastHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 	}
 }

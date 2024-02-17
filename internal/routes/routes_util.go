@@ -134,6 +134,21 @@ func serveSuccessToast(w http.ResponseWriter, message string) {
 	return
 }
 
+func checkIfUserLoggedIn(r *http.Request, w http.ResponseWriter, m *CrawlMaster) error {
+	uuidToken, err := getRequestCookie(r, "uuid")
+	if err != nil {
+		return fmt.Errorf("User is not logged in")
+	}
+	sessionToken, err := getRequestCookie(r, "session_token")
+	if err != nil {
+		return fmt.Errorf("User is not logged in")
+	}
+	if uuidToken == "" || sessionToken == "" {
+		return fmt.Errorf("User is not logged in")
+	}
+	return m.DB.ConfirmUUIDandToken(uuidToken, sessionToken)
+}
+
 func getRequestCookie(r *http.Request, name string) (string, error) {
 	cookie, err := r.Cookie(name)
 	if err == http.ErrNoCookie {

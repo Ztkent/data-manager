@@ -18,6 +18,5 @@ It offers a convenient way to quickly crawl and collect recent web data for data
 
 
 // TODO: 
-- require login for crawl/random/export/visualize
 - add collected files tab
-- success toast on login/logout
+- easier to clear toast, fade?
