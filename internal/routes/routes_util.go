@@ -104,12 +104,14 @@ func serveFailToast(w http.ResponseWriter, message string) {
 	// Render the crawl_status template, which displays the toast
 	tmpl, err := template.ParseFiles("internal/html/templates/crawl_status_toast.gohtml")
 	if err != nil {
+		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	toast := &Toast{ToastContent: message, Border: "border-red-200"}
 	err = tmpl.Execute(w, toast)
 	if err != nil {
+		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	return
@@ -119,12 +121,14 @@ func serveSuccessToast(w http.ResponseWriter, message string) {
 	// Render the crawl_status template, which displays the toast
 	tmpl, err := template.ParseFiles("internal/html/templates/crawl_status_toast.gohtml")
 	if err != nil {
+		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	toast := &Toast{ToastContent: message, Border: "border-green-200"}
 	err = tmpl.Execute(w, toast)
 	if err != nil {
+		log.Default().Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	return

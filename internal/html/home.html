@@ -153,8 +153,37 @@
             </ul>
         </div>
         <div class="relative mt-4 px-4 max-w-4xl mx-auto">
-            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="tab-content overflow-auto"></div>
-            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;"></div>
+            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="tab-content overflow-auto">
+                <h4 class="text-xl font-bold mb-4">Active Crawlers</h4>
+                <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+                    <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+                        <tr>
+                            <th class="py-4 px-6">URL</th>
+                            <th class="py-4 px-6">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                    </tbody>
+                </table>
+            </div>
+            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;">
+                <h4 class="text-xl font-bold mb-4">Recent URLs</h4>
+                <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+                    <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+                    <tr>
+                        <th class="py-2 px-6">ID</th>
+                        <th class="py-2 px-6">URL</th>
+                        <th class="py-2 px-6">Referrer</th>
+                        <th class="py-2 px-6">Last Visited At</th>
+                        <th class="py-2 px-6">Is Complete</th>
+                        <th class="py-2 px-6">Is Blocked</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
             <div id="networkTab" class="hidden tab-content overflow-auto">
                 <div class="flex justify-between items-center mb-4">
                     <h4 class="text-xl font-bold">Network Graph</h4>

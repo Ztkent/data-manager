@@ -124,11 +124,13 @@ func (m *CrawlMaster) Login() http.HandlerFunc {
 			// Render the register template
 			tmpl, err := template.ParseFiles("internal/html/templates/register_modal.gohtml")
 			if err != nil {
+				log.Default().Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			err = tmpl.Execute(w, nil)
 			if err != nil {
+				log.Default().Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
@@ -137,11 +139,13 @@ func (m *CrawlMaster) Login() http.HandlerFunc {
 		// Render the login template
 		tmpl, err := template.ParseFiles("internal/html/templates/login_modal.gohtml")
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, nil)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -151,11 +155,13 @@ func (m *CrawlMaster) ConfirmLogin() http.HandlerFunc {
 		// Render the logout button if the user is logged in
 		tmpl, err := template.ParseFiles("internal/html/templates/logout_button.gohtml")
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, nil)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -169,18 +175,21 @@ func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 		// Validate the email and password
 		valid := validateEmail(email)
 		if !valid {
+			log.Default().Println("Invalid email")
 			http.Error(w, "Invalid email", http.StatusBadRequest)
 			// TODO: return the login modal with the error message
 			return
 		}
 		validPass, reason := validatePassword(pass, pass)
 		if !validPass {
+			log.Default().Println("Invalid password: ", reason)
 			http.Error(w, reason, http.StatusBadRequest)
 			// TODO: return the login modal with the error message
 			return
 		}
 		userId, token, err := m.DB.LoginUser(email, pass)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, "Login Failed", http.StatusInternalServerError)
 			// TODO: return the login modal with the error message
 			return
@@ -231,12 +240,14 @@ func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
 
 		id, err := getRequestCookie(r, "uuid")
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, "Failed to get UUID", http.StatusInternalServerError)
 			return
 		}
 
 		err = m.DB.CreateUser(id, email, pass)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, "Failed to create user", http.StatusInternalServerError)
 			// TODO: return the login modal with the error message
 			return
@@ -254,11 +265,13 @@ func (m *CrawlMaster) Logout() http.HandlerFunc {
 		// Render the active_crawlers template, which displays the active crawlers
 		tmpl, err := template.ParseFiles("internal/html/templates/login_button.gohtml")
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, nil)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -268,6 +281,7 @@ func (m *CrawlMaster) ServeNetwork() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -286,6 +300,7 @@ func (m *CrawlMaster) GenNetwork() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -294,17 +309,20 @@ func (m *CrawlMaster) GenNetwork() http.HandlerFunc {
 		// Generate a network file with the processor
 		err = cmd.Run()
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, "Error generating network file", http.StatusInternalServerError)
 			return
 		}
 		// Render the active_crawlers template, which displays the active crawlers
 		tmpl, err := template.ParseFiles("internal/html/templates/network_iframe.gohtml")
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, nil)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -314,10 +332,12 @@ func (m *CrawlMaster) ExportDB() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if _, err := os.Stat(crawlManager.GetDBPath()); os.IsNotExist(err) {
+			log.Default().Println(err)
 			http.Error(w, "Results DB not found", http.StatusNotFound)
 			return
 		}
@@ -332,6 +352,7 @@ func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -339,8 +360,9 @@ func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 		r.ParseForm()
 		curr_config, err := config.ParseFormToConfig(r.Form, crawlManager.GetDBPath())
 		if err != nil {
-			http.Error(w, "Error parsing config settings, using default", http.StatusBadRequest)
+			log.Default().Println(err)
 			curr_config = config.NewDefaultConfig()
+			http.Error(w, "Error parsing config settings, using default", http.StatusBadRequest)
 		}
 
 		if curr_config.StartingURL == "" {
@@ -359,6 +381,7 @@ func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 		crawlManager.CrawlMap[curr_config.StartingURL] = cancel
 		err = crawlManager.StartCrawlerWithConfig(ctxCrawler, curr_config)
 		if err != nil {
+			log.Default().Println(err)
 			serveFailToast(w, "Error starting crawler: "+curr_config.StartingURL)
 			return
 		}
@@ -369,6 +392,7 @@ func (m *CrawlMaster) CrawlRandomHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -386,14 +410,16 @@ func (m *CrawlMaster) CrawlRandomHandler() http.HandlerFunc {
 		r.Form.Set("StartingURL", randomURL)
 		curr_config, err := config.ParseFormToConfig(r.Form, crawlManager.GetDBPath())
 		if err != nil {
-			http.Error(w, "Error parsing config settings, using default", http.StatusBadRequest)
+			log.Default().Println(err)
 			curr_config = config.NewDefaultConfig()
+			http.Error(w, "Error parsing config settings, using default", http.StatusBadRequest)
 		}
 
 		ctxCrawler, cancel := context.WithCancel(context.Background())
 		crawlManager.CrawlMap[randomURL] = cancel
 		err = crawlManager.StartCrawlerWithConfig(ctxCrawler, curr_config)
 		if err != nil {
+			log.Default().Println(err)
 			serveFailToast(w, "Error starting crawler: "+curr_config.StartingURL)
 			return
 		}
@@ -404,6 +430,7 @@ func (m *CrawlMaster) KillAllCrawlersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -428,6 +455,7 @@ func (m *CrawlMaster) KillCrawlerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -436,8 +464,9 @@ func (m *CrawlMaster) KillCrawlerHandler() http.HandlerFunc {
 		cancel, ok := crawlManager.CrawlMap[url]
 		if !ok {
 			http.Error(w, "Crawler not found", http.StatusNotFound)
+		} else {
+			cancel()
 		}
-		cancel()
 		m.ActiveCrawlersHandler()(w, r)
 	}
 }
@@ -449,6 +478,7 @@ func (m *CrawlMaster) ActiveCrawlersHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -463,11 +493,13 @@ func (m *CrawlMaster) ActiveCrawlersHandler() http.HandlerFunc {
 		// Render the active_crawlers template, which displays the active crawlers
 		tmpl, err := template.ParseFiles("internal/html/templates/active_crawlers.gohtml")
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		err = tmpl.Execute(w, crawlers)
 		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -477,18 +509,19 @@ func (m *CrawlMaster) RecentURLsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
 		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tmpl, err := template.ParseFiles("internal/html/templates/recent_visited.gohtml")
+		if err != nil {
+			log.Default().Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		visited, err := crawlManager.SqliteDB.GetRecentVisited()
 		if err != nil {
 			log.Default().Println(err)
-			return
-		}
-		tmpl, err := template.ParseFiles("internal/html/templates/recent_visited.gohtml")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
 		err = tmpl.Execute(w, visited)
 		if err != nil {
@@ -558,7 +591,16 @@ func (m *CrawlMaster) GetRecentlyActiveUsers() map[string]bool {
 	for _, crawler := range m.ActiveManagers {
 		active_users[crawler.UserID] = true
 	}
-	// TODO: Support users who have been active in the last 3 days
+	// Support users who have been active in the last 3 days
+	dbActiveUsers, err := m.DB.GetRecentlyActiveUsers()
+	if err != nil {
+		log.Default().Println(err)
+	} else {
+		for _, user := range dbActiveUsers {
+			active_users[user] = true
+		}
+	}
+
 	return active_users
 }
 

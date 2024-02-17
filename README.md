@@ -19,7 +19,5 @@ It offers a convenient way to quickly crawl and collect recent web data for data
 
 // TODO: 
 - require login for crawl/random/export/visualize
-- Fix the Cert. Its for ztkent.com, not data-manager.ztkent.com
 - add collected files tab
-- cleanup, remove and files for users not active in db for 3 days
-- set default content for active crawlers and recent urls tabs. they pop it
+- success toast on login/logout

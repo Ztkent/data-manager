@@ -51,6 +51,9 @@ func main() {
 
 	// Start server
 	fmt.Println("Server is running on port 8080")
+	if os.Getenv("ENV") == "dev" {
+		log.Fatal(http.ListenAndServe(":8080", r))
+	}
 	log.Fatal(http.ListenAndServeTLS(":8080", os.Getenv("CERT_PATH"), os.Getenv("CERT_KEY_PATH"), r))
 }
 

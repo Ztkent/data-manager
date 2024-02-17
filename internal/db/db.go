@@ -26,6 +26,7 @@ type MasterDatabase interface {
 	CreateUser(userID, email, password string) error
 	LoginUser(email, password string) (string, string, error)
 	UpdateUserAuth(userID, token string) error
+	GetRecentlyActiveUsers() ([]string, error)
 }
 
 type ManagerDatabase interface {
@@ -155,6 +156,33 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 	})
 
 	return visiteds, nil
+}
+
+func (db *database) GetRecentlyActiveUsers() ([]string, error) {
+	if db.db == nil {
+		return nil, fmt.Errorf("database is nil")
+	}
+	rows, err := db.db.Query(`
+		SELECT user_id
+		FROM auth
+		WHERE updated_at > NOW() - INTERVAL '72 hours'
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("could not query postgres: %v", err)
+	}
+	defer rows.Close()
+	var users []string
+	for rows.Next() {
+		var user string
+		if err := rows.Scan(&user); err != nil {
+			return nil, fmt.Errorf("could not scan postgres: %v", err)
+		}
+		users = append(users, user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("could not iterate postgres: %v", err)
+	}
+	return users, nil
 }
 
 func ConnectSqlite(filePath string) *sql.DB {

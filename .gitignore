@@ -12,7 +12,7 @@ user/
 # Configurations
 .env
 .env-source
-certs/*
+certs/
 
 # Binaries
 pkg/data-crawler/data-crawler
