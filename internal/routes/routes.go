@@ -150,9 +150,12 @@ func (m *CrawlMaster) Login() http.HandlerFunc {
 		}
 	}
 }
-func (m *CrawlMaster) ConfirmLogin() http.HandlerFunc {
+func (m *CrawlMaster) ConfirmLogin(alert bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Render the logout button if the user is logged in
+		if alert {
+			serveSuccessToast(w, "Login Successful")
+		}
 		tmpl, err := template.ParseFiles("internal/html/templates/logout_button.gohtml")
 		if err != nil {
 			log.Default().Println(err)
@@ -166,6 +169,28 @@ func (m *CrawlMaster) ConfirmLogin() http.HandlerFunc {
 		}
 	}
 }
+
+func (m *CrawlMaster) ValidateLogin() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Check if the user is logged in
+		uuidCookie, err := r.Cookie("uuid")
+		tokenCookie, err2 := r.Cookie("session_token")
+		if err == http.ErrNoCookie || err2 == http.ErrNoCookie {
+			http.Error(w, "User is not logged in", http.StatusUnauthorized)
+			return
+		} else if err != nil || err2 != nil {
+			http.Error(w, "Failed to read cookie", http.StatusInternalServerError)
+			return
+		}
+		err = m.DB.ConfirmUUIDandToken(uuidCookie.Value, tokenCookie.Value)
+		if err != nil {
+			http.Error(w, "Failed to confirm UUID and token", http.StatusInternalServerError)
+			return
+		}
+		m.ConfirmLogin(false)(w, r)
+	}
+}
+
 func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
@@ -263,6 +288,7 @@ func (m *CrawlMaster) Logout() http.HandlerFunc {
 		// Remove the cookies
 		clearCookies(w)
 		// Render the active_crawlers template, which displays the active crawlers
+		serveSuccessToast(w, "Logout Successful")
 		tmpl, err := template.ParseFiles("internal/html/templates/login_button.gohtml")
 		if err != nil {
 			log.Default().Println(err)

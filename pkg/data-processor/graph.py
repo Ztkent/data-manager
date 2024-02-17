@@ -130,8 +130,6 @@ def save_pyvis_link_graph(urls: db.LinkData, enable_physics, output_file: str) -
     
     G.set_options(json.dumps(options))    
     for referrer, url in urls:
-        if referrer == "STARTING_URL":
-            continue
         G.add_node(referrer)
         G.add_node(url)
         G.add_edge(referrer, url)

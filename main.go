@@ -64,7 +64,8 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Post("/logout", crawlMaster.Logout())
 	r.Post("/submit-register", crawlMaster.SubmitRegister())
 	r.Post("/submit-login", crawlMaster.SubmitLogin())
-	r.Post("/confirm-login", crawlMaster.ConfirmLogin())
+	r.Post("/confirm-login", crawlMaster.ConfirmLogin(true))
+	r.Post("/validate-login", crawlMaster.ValidateLogin())
 
 	// Service
 	r.Get("/", crawlMaster.ServeHome())

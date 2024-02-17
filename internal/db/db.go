@@ -27,6 +27,7 @@ type MasterDatabase interface {
 	LoginUser(email, password string) (string, string, error)
 	UpdateUserAuth(userID, token string) error
 	GetRecentlyActiveUsers() ([]string, error)
+	ConfirmUUIDandToken(userID, token string) error
 }
 
 type ManagerDatabase interface {
@@ -183,6 +184,27 @@ func (db *database) GetRecentlyActiveUsers() ([]string, error) {
 		return nil, fmt.Errorf("could not iterate postgres: %v", err)
 	}
 	return users, nil
+}
+
+func (db *database) ConfirmUUIDandToken(userID, token string) error {
+	if db.db == nil {
+		return fmt.Errorf("database is nil")
+	}
+
+	// confirm that the uuid and token match what we have in the database
+	row := db.db.QueryRow("SELECT COUNT(*) FROM auth WHERE user_id = $1 AND session_token = $2", userID, token)
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return fmt.Errorf("could not query user auth: %v", err)
+	}
+
+	if count == 0 {
+		return fmt.Errorf("uuid and token do not match")
+	}
+
+	return nil
 }
 
 func ConnectSqlite(filePath string) *sql.DB {
