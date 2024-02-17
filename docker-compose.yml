@@ -11,7 +11,7 @@ services:
       - "6379:6379"
     profiles:
       - db
-      - app
+      - data-manager
     networks:
       - kent_network
   postgres:
@@ -26,10 +26,10 @@ services:
       - "5432:5432"
     profiles:
       - db
-      - app
+      - data-manager
     networks:
       - kent_network
-  app:
+  data-manager:
     build:
       context: .
       args:
@@ -54,6 +54,6 @@ services:
       - postgres
       - redis
     profiles:
-      - app
+      - data-manager
     networks:
       - kent_network
