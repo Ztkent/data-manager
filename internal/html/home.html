@@ -222,3 +222,22 @@
         });
     }
 </script>
+<script>
+var crawlStatus = document.getElementById('crawlStatus');
+if (crawlStatus !== null) {
+    crawlStatus.addEventListener('htmx:afterSwap', function(event) {
+        setTimeout(function() {
+            var toast = document.getElementById('toast');
+            if (toast !== null) {
+                toast.style.opacity = '0';
+            }
+        }, 3000);
+        setTimeout(function() {
+            var toast = document.getElementById('toast');
+            if (toast !== null) {
+                toast.remove();
+            }
+        }, 5000);
+    });
+}
+</script>
