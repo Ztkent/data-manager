@@ -10,8 +10,8 @@ import (
 
 	"github.com/Ztkent/data-manager/internal/db"
 	"github.com/Ztkent/data-manager/internal/routes"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -58,6 +58,7 @@ func main() {
 }
 
 func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
+
 	// Auth
 	r.Post("/ensure-uuid", crawlMaster.EnsureUUIDHandler())
 	r.Post("/login", crawlMaster.Login())
