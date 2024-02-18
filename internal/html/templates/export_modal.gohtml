@@ -1,0 +1,33 @@
+<div id="exportModalContent" tabindex="-1" aria-hidden="true" class="flex overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-xl max-h-full">
+        <div class="relative rounded-lg shadow bg-gray-800 border border-gray-300">
+            <div class="flex items-center justify-between p-4 md:p-5 rounded-t border-gray-600">
+                <h3 class="text-xl font-semibold text-white">
+                    Export Data
+                </h3>
+                <button hx-post="/login?close=true" hx-target="#exportModal" class="text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center hover:bg-gray-600 hover:text-white" data-modal-hide="default-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <div class="p-4 md:p-5 space-y-4">
+                <form class="max-w-sm mx-auto">
+                    <div class="mb-5">
+                        <a href="/export" class="w-48 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-6 py-3 text-center text-gray-300">Export DB</a>
+                    </div>
+                    <div class="mb-5">
+                        <a href="/export?csv=true" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Export CSV</a>
+                    </div>
+                </form>
+            </div>
+            <div class="rounded-lg shadow m-4 bg-gray-800">
+                <div class="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between justify-center">
+                <span class="text-sm sm:text-center text-gray-400"> <a href="https://github.com/Ztkent/data-manager" target="_blank" class="hover:underline"> © 2024 Ztkent</a>
+                </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

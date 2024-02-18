@@ -150,7 +150,7 @@ func (m *CrawlMaster) Login() http.HandlerFunc {
 		}
 	}
 }
-func (m *CrawlMaster) ConfirmLogin(alert bool) http.HandlerFunc {
+func (m *CrawlMaster) ConfirmLoginAttempt(alert bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Render the logout button if the user is logged in
 		if alert {
@@ -179,7 +179,7 @@ func (m *CrawlMaster) ValidateLogin() http.HandlerFunc {
 			http.Error(w, "User is not logged in", http.StatusUnauthorized)
 			return
 		}
-		m.ConfirmLogin(false)(w, r)
+		m.ConfirmLoginAttempt(false)(w, r)
 	}
 }
 
@@ -369,15 +369,71 @@ func (m *CrawlMaster) ExportDB() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		if _, err := os.Stat(crawlManager.GetDBPath()); os.IsNotExist(err) {
 			log.Default().Println(err)
 			http.Error(w, "Results DB not found", http.StatusNotFound)
 			return
 		}
 
-		w.Header().Set("Content-Disposition", "attachment; filename=results.db")
+		dataPath := crawlManager.GetDBPath()
+		filePath := "results.db"
+		if r.URL.Query().Get("csv") == "true" {
+			// Export the database to a CSV file
+			dataPath, err = crawlManager.SqliteDB.ExportToCSV(crawlManager.GetDBPath(), "visited")
+			if err != nil {
+				log.Default().Println(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			filePath = "results.csv"
+		}
+
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filePath))
 		w.Header().Set("Content-Type", "application/octet-stream")
-		http.ServeFile(w, r, crawlManager.GetDBPath())
+		http.ServeFile(w, r, dataPath)
+
+		// Delete the temporary files, if any
+		if r.URL.Query().Get("csv") == "true" {
+			err := os.Remove(dataPath)
+			if err != nil {
+				log.Default().Println(err)
+			}
+		}
+	}
+}
+
+func (m *CrawlMaster) ExportModal() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		crawlManager, err := m.GetCrawlManagerForRequest(r)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if _, err := os.Stat(crawlManager.GetDBPath()); os.IsNotExist(err) {
+			log.Default().Println(err)
+			http.Error(w, "Results DB not found", http.StatusNotFound)
+			return
+		}
+
+		tmpl, err := template.ParseFiles("internal/html/templates/export_modal.gohtml")
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 

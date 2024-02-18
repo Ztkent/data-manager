@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ type MasterDatabase interface {
 
 type ManagerDatabase interface {
 	GetRecentVisited() ([]Visited, error)
+	ExportToCSV(path string, table string) (string, error)
 }
 
 func NewManagerDatabase(db *sql.DB) ManagerDatabase {
@@ -157,6 +159,66 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 	})
 
 	return visiteds, nil
+}
+func (db *database) ExportToCSV(path string, table string) (string, error) {
+	if db.db == nil {
+		return "", fmt.Errorf("database is nil")
+	}
+
+	// Create a new CSV file
+	uuid := uuid.New().String()
+	fileName := table + "_" + uuid + ".csv"
+	filePath := filepath.Join("user/data-crawler/", fileName)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("could not create file: %v", err)
+	}
+	defer file.Close()
+	rows, err := db.db.Query("SELECT * FROM " + table)
+	if err != nil {
+		return "", fmt.Errorf("could not query sqlite: %v", err)
+	}
+	defer rows.Close()
+	columns, err := rows.Columns()
+	if err != nil {
+		return "", fmt.Errorf("could not get columns: %v", err)
+	}
+	// Write the header row
+	for i, colName := range columns {
+		if i > 0 {
+			file.WriteString(",")
+		}
+		file.WriteString(colName)
+	}
+	file.WriteString("\n")
+
+	// Write the data rows
+	values := make([]interface{}, len(columns))
+	valuePtrs := make([]interface{}, len(columns))
+	for rows.Next() {
+		for i := range columns {
+			valuePtrs[i] = &values[i]
+		}
+		rows.Scan(valuePtrs...)
+		for i := range columns {
+			if i > 0 {
+				file.WriteString(",")
+			}
+			switch v := values[i].(type) {
+			case int64:
+				file.WriteString(fmt.Sprintf("%d", v))
+			case bool:
+				file.WriteString(fmt.Sprintf("%t", v))
+			case time.Time:
+				file.WriteString(v.Format("2006-01-02 15:04:05"))
+			default:
+				file.WriteString(fmt.Sprintf("%s", v))
+			}
+		}
+		file.WriteString("\n")
+	}
+
+	return filePath, nil
 }
 
 func (db *database) GetRecentlyActiveUsers() ([]string, error) {

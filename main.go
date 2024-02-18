@@ -64,7 +64,7 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Post("/logout", crawlMaster.Logout())
 	r.Post("/submit-register", crawlMaster.SubmitRegister())
 	r.Post("/submit-login", crawlMaster.SubmitLogin())
-	r.Post("/confirm-login", crawlMaster.ConfirmLogin(true))
+	r.Post("/confirm-login", crawlMaster.ConfirmLoginAttempt(true))
 	r.Post("/validate-login", crawlMaster.ValidateLogin())
 
 	// Service
@@ -78,6 +78,7 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Post("/kill-crawler", crawlMaster.KillCrawlerHandler())
 	r.Get("/active-crawlers", crawlMaster.ActiveCrawlersHandler())
 	r.Get("/recent-urls", crawlMaster.RecentURLsHandler())
+	r.Post("/export-modal", crawlMaster.ExportModal())
 	r.Get("/export", crawlMaster.ExportDB())
 	r.Get("/dismiss-toast", crawlMaster.DismissToastHandler())
 	r.Post("/about-modal", crawlMaster.AboutModalHandler())
