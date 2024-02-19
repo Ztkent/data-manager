@@ -7,11 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Ztkent/data-manager/internal/db"
 	"github.com/Ztkent/data-manager/internal/routes"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 )
 
 func main() {
@@ -24,6 +26,7 @@ func main() {
 		log.Fatal("Failed to Connect to Redis: " + err.Error())
 	}
 	fmt.Println("Successfully connected to Redis")
+
 	// Connect Master PG
 	pgDB, err := db.ConnectPostgres()
 	if err != nil {
@@ -40,7 +43,9 @@ func main() {
 
 	// Initialize router and middleware
 	r := chi.NewRouter()
+	// Log request and recover from panics
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
 	// Define routes
 	defineRoutes(r, &crawlMaster)
@@ -58,6 +63,12 @@ func main() {
 }
 
 func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
+	// Apply a rate limiter to all routes
+	r.Use(httprate.Limit(
+		10,             // requests
+		60*time.Second, // per duration
+		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
+	))
 
 	// Auth
 	r.Post("/ensure-uuid", crawlMaster.EnsureUUIDHandler())

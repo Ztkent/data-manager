@@ -4,6 +4,7 @@ go 1.21.5
 
 require (
 	github.com/go-chi/chi/v5 v5.0.12
+	github.com/go-chi/httprate v0.8.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0

@@ -39,6 +39,8 @@ type CrawlManager struct {
 	sync.RWMutex
 }
 
+const MAX_CRALWERS = 5 // Maximum number of concurrent crawlers
+
 // Crawl Manager
 func (m *CrawlManager) GetDBPath() string {
 	return fmt.Sprintf("user/data-crawler/results_%s.db", m.UserID)
@@ -67,6 +69,18 @@ func (m *CrawlManager) StartCrawlerWithConfig(ctx context.Context, curr_config *
 		// Notify the channel that the crawler is done
 		m.CrawlChan <- curr_config.StartingURL
 	}()
+	return nil
+}
+
+func (m *CrawlManager) AddCrawlerToMap(curr_config *config.Config, cancel context.CancelFunc) error {
+	m.Lock()
+	defer m.Unlock()
+
+	// Limit the number of concurrent crawlers
+	if len(m.CrawlMap) >= MAX_CRALWERS {
+		return fmt.Errorf("Too many active crawlers")
+	}
+	m.CrawlMap[curr_config.StartingURL] = cancel
 	return nil
 }
 
@@ -472,8 +486,15 @@ func (m *CrawlMaster) CrawlHandler() http.HandlerFunc {
 			return
 		}
 
+		// Add the crawler to the map, check the limit
 		ctxCrawler, cancel := context.WithCancel(context.Background())
-		crawlManager.CrawlMap[curr_config.StartingURL] = cancel
+		err = crawlManager.AddCrawlerToMap(curr_config, cancel)
+		if err != nil {
+			log.Default().Println(err)
+			serveFailToast(w, err.Error())
+			return
+		}
+
 		err = crawlManager.StartCrawlerWithConfig(ctxCrawler, curr_config)
 		if err != nil {
 			log.Default().Println(err)
@@ -515,8 +536,15 @@ func (m *CrawlMaster) CrawlRandomHandler() http.HandlerFunc {
 			http.Error(w, "Error parsing config settings, using default", http.StatusBadRequest)
 		}
 
+		// Add the crawler to the map, check the limit
 		ctxCrawler, cancel := context.WithCancel(context.Background())
-		crawlManager.CrawlMap[randomURL] = cancel
+		err = crawlManager.AddCrawlerToMap(curr_config, cancel)
+		if err != nil {
+			log.Default().Println(err)
+			serveFailToast(w, err.Error())
+			return
+		}
+
 		err = crawlManager.StartCrawlerWithConfig(ctxCrawler, curr_config)
 		if err != nil {
 			log.Default().Println(err)
