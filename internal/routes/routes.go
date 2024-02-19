@@ -468,7 +468,7 @@ func (m *CrawlMaster) ExportModal() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := checkIfUserLoggedIn(r, w, m)
 		if err != nil {
-			serveFailToast(w, "User is not logged in")
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		crawlManager, err := m.GetCrawlManagerForRequest(r)
