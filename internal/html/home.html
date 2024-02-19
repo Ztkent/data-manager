@@ -1,199 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
-    <title>Data Manager</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&display=swap" rel="stylesheet">
-    <div hx-post="/ensure-uuid" hx-swap="none" hx-trigger="load, every 15s"></div>
-    <div hx-post="/validate-login" hx-target="#logDiv" hx-trigger="load, every 15s"></div>
-</head>
-<body class="bg-gray-900 text-gray-300 font-sans" style="font-family: 'Roboto', sans-serif;">
-    <header class="bg-gray-800 p-2 flex justify-between items-center">
-        <div class="flex items-center">
-            <img src="img/s_logo.png" alt="Logo" class="ml-2 mr-2 w-12 h-12">
-            <h1 class="text-white text-lg font-semibold" style="font-family: 'Roboto', sans-serif; font-weight: 300;">Data Manager</h1>
-        </div>
-        <div class="flex">
-            <button hx-post="/about-modal" hx-target="#aboutModal" class="ml-2 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">About</button>
-            <div id="logDiv">
-                <button id="loginButton" hx-post="/login?register=true" hx-target="#loginModal" class="ml-2 mr-4 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">Login</button>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+        <title>Data Manager</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+        <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&display=swap" rel="stylesheet">
+        <div hx-post="/ensure-uuid" hx-swap="none" hx-trigger="load, every 15s"></div>
+        <div hx-post="/validate-login" hx-target="#logDiv" hx-trigger="load, every 15s"></div>
+    </head>
+    <body class="bg-gray-900 text-gray-300 font-sans" style="font-family: 'Roboto', sans-serif; min-height: 100vh; display: flex; flex-direction: column;">
+        <header class="bg-gray-800 p-2 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="img/s_logo.png" alt="Logo" class="ml-2 mr-2 w-12 h-12">
+                <h1 class="text-white text-lg font-semibold" style="font-family: 'Roboto', sans-serif; font-weight: 300;">Data Manager</h1>
             </div>
-        </div>
-    </header>
-    <div class="bg-gray-900 text-white text-center pt-10 pb-4 px-4 border-t-4 border-gray-600">
-        <div class="flex justify-center">
-            <div id="aboutModal"></div>
-            <div id="loginModal"></div>
-            <div id="exportModal"></div>
-        </div>
-        <h1 class="text-2xl font-bold mb-2">Welcome to Data Manager</h1>
-        <p class="text-sm mb-2">Navigate the internet, analyze content, metadata, and website structure.</p>
-        <p class="text-sm">Enter the URL below and press "Start Crawling"</p>
-    </div>
-    <main class="p-4 flex justify-center">
-        <form id="crawler-form">
-            <div class="flex flex-col items-center">
-                <div class="flex items-center mb-4">
-                    <form class="flex items-center">
-                        <input type="text" id="crawlInput" name="StartingURL" placeholder="https://www.example.com" class="px-4 py-2 w-80 border border-gray-600 bg-gray-800 text-white rounded ml-16" />
-                        <button hx-post="/crawl" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-md px-5 py-2.5 text-center text-gray-200 ml-4">Start Crawling</button>
-                        <div id="spinner" class="ml-2 htmx-indicator" role="status">
-                            <svg aria-hidden="true" class="w-8 h-8 animate-spin text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="grey" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-                            </svg>
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </form>
+            <div class="flex">
+                <button hx-post="/about-modal" hx-target="#aboutModal" class="ml-2 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">About</button>
+                <div id="logDiv">
+                    <button id="loginButton" hx-post="/login?register=true" hx-target="#loginModal" class="ml-2 mr-4 bg-gray-500 opacity-75 hover:opacity-100 text-white px-4 py-2 rounded">Login</button>
                 </div>
-                <div class="grid grid-cols-3 gap-4 ml-2">
-                    <button hx-post="/crawl-random" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Crawl Random</button>
-                    <div id="exportButton" hx-post="/export-modal" hx-target="#exportModal" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300"> Export Data</div>
-                    <button hx-post="/kill-all-crawlers" hx-indicator="#spinner" hx-target="#crawlStatus" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Stop All Crawling</button>
-                </div>
-                <div id="crawlStatus">
-                    <div class="fixed top-16 right-4 m-6 w-64 bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-500 ease-in-out z-50 border-2 border-opacity-50 border-yellow-200">
-                        <div class="flex justify-between items-center">
-                            <div id="toast-content">
-                                Toast Content
-                            </div>
-                            <button id="toast-dismiss" class="ml-4" hx-get="/dismiss-toast" hx-target="#crawlStatus">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-200">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </div>
+        </header>
+        <div class="bg-gray-900 text-white text-center pt-10 pb-4 px-4 border-t-4 border-gray-600">
+            <div class="flex justify-center">
+                <div id="aboutModal"></div>
+                <div id="loginModal"></div>
+                <div id="exportModal"></div>
+            </div>
+            <h1 class="text-2xl font-bold mb-2">Welcome to Data Manager</h1>
+            <p class="text-sm mb-2">Navigate the internet, analyze content, metadata, and website structure.</p>
+            <p class="text-sm">Enter the URL below and press "Start Crawling"</p>
+        </div>
+        <main class="p-4 flex justify-center">
+            <form id="crawler-form">
+                <div class="flex flex-col items-center">
+                    <div class="flex items-center mb-4">
+                        <form class="flex items-center">
+                            <input type="text" id="crawlInput" name="StartingURL" placeholder="https://www.example.com" class="px-4 py-2 w-80 border border-gray-600 bg-gray-800 text-white rounded ml-16" />
+                            <button hx-post="/crawl" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-md px-5 py-2.5 text-center text-gray-200 ml-4">Start Crawling</button>
+                            <div id="spinner" class="ml-2 htmx-indicator" role="status">
+                                <svg aria-hidden="true" class="w-8 h-8 animate-spin text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="grey" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
                                 </svg>
-                            </button>
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 ml-2">
+                        <button hx-post="/crawl-random" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Crawl Random</button>
+                        <div id="exportButton" hx-post="/export-modal" hx-target="#exportModal" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300"> Export Data</div>
+                        <button hx-post="/kill-all-crawlers" hx-indicator="#spinner" hx-target="#crawlStatus" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Stop All Crawling</button>
+                    </div>
+                    <div id="crawlStatus">
+                        <div class="fixed top-16 right-4 m-6 w-64 bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-500 ease-in-out z-50 border-2 border-opacity-50 border-yellow-200">
+                            <div class="flex justify-between items-center">
+                                <div id="toast-content">
+                                    Toast Content
+                                </div>
+                                <button id="toast-dismiss" class="ml-4" hx-get="/dismiss-toast" hx-target="#crawlStatus">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-200">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                    <div class="space-y-4 mt-4">
+                        <details class="w-full">
+                            <summary class="cursor-pointer">Additional Crawl Options</summary>
+                            <form id="crawlOptions" class="grid grid-cols-2 gap-4 p-4">
+                                <label class="flex items-center">
+                                    Permitted Domains:
+                                    <input type="text" name="PermittedDomains" placeholder="domain1.com, ..." class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                </label>
+                                <label class="flex items-center">
+                                    Blacklist Domains:
+                                    <input type="text" name="BlacklistDomains" placeholder="domain1.com, ..." class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                </label>
+                                <label class="flex items-center">
+                                    Rotate User Agents:
+                                    <input type="checkbox" name="RotateUserAgents" checked class="ml-2" />
+                                </label>
+                                <label class="flex items-center">
+                                    Respect Robots:
+                                    <input type="checkbox" name="RespectRobots" checked class="ml-2" />
+                                </label>
+                                <label class="flex items-center">
+                                    Max URLs to Visit:
+                                    <input type="number" name="MaxURLsToVisit" value="5" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                </label>
+                                <label class="flex items-center">
+                                    Crawler Timeout:
+                                    <input type="number" name="CrawlerTimeout" value="3600" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                </label>
+                                <label class="flex items-center">
+                                    Crawler Request Timeout:
+                                    <input type="number" name="CrawlerRequestTimeout" value="60" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                </label>
+                                <label class="flex items-center">
+                                    Crawler Request Delay (ms):
+                                    <input type="number" name="CrawlerRequestDelayMs" value="1000" class="ml-2 bg-gray-800 text-white border-gray-600" />
+                                </label>
+                                <label class="flex items-center">
+                                    Collect HTML:
+                                    <input type="checkbox" name="CollectHTML" class="ml-2" />
+                                </label>
+                                <label class="flex items-center">
+                                    Collect Images:
+                                    <input type="checkbox" name="CollectImages" class="ml-2" />
+                                </label>
+                                <label class="flex items-center">
+                                    Free Crawl:
+                                    <input type="checkbox" name="FreeCrawl" checked class="ml-2" />
+                                </label>
+                            </form>
+                        </details>
+                    </div>
                 </div>
-                <div class="space-y-4 mt-4">
-                    <details class="w-full">
-                        <summary class="cursor-pointer">Additional Crawl Options</summary>
-                        <form id="crawlOptions" class="grid grid-cols-2 gap-4 p-4">
-                            <label class="flex items-center">
-                                Permitted Domains:
-                                <input type="text" name="PermittedDomains" placeholder="domain1.com, ..." class="ml-2 bg-gray-800 text-white border-gray-600" />
-                            </label>
-                            <label class="flex items-center">
-                                Blacklist Domains:
-                                <input type="text" name="BlacklistDomains" placeholder="domain1.com, ..." class="ml-2 bg-gray-800 text-white border-gray-600" />
-                            </label>
-                            <label class="flex items-center">
-                                Rotate User Agents:
-                                <input type="checkbox" name="RotateUserAgents" checked class="ml-2" />
-                            </label>
-                            <label class="flex items-center">
-                                Respect Robots:
-                                <input type="checkbox" name="RespectRobots" checked class="ml-2" />
-                            </label>
-                            <label class="flex items-center">
-                                Max URLs to Visit:
-                                <input type="number" name="MaxURLsToVisit" value="5" class="ml-2 bg-gray-800 text-white border-gray-600" />
-                            </label>
-                            <label class="flex items-center">
-                                Crawler Timeout:
-                                <input type="number" name="CrawlerTimeout" value="3600" class="ml-2 bg-gray-800 text-white border-gray-600" />
-                            </label>
-                            <label class="flex items-center">
-                                Crawler Request Timeout:
-                                <input type="number" name="CrawlerRequestTimeout" value="60" class="ml-2 bg-gray-800 text-white border-gray-600" />
-                            </label>
-                            <label class="flex items-center">
-                                Crawler Request Delay (ms):
-                                <input type="number" name="CrawlerRequestDelayMs" value="1000" class="ml-2 bg-gray-800 text-white border-gray-600" />
-                            </label>
-                            <label class="flex items-center">
-                                Collect HTML:
-                                <input type="checkbox" name="CollectHTML" class="ml-2" />
-                            </label>
-                            <label class="flex items-center">
-                                Collect Images:
-                                <input type="checkbox" name="CollectImages" class="ml-2" />
-                            </label>
-                            <label class="flex items-center">
-                                Free Crawl:
-                                <input type="checkbox" name="FreeCrawl" checked class="ml-2" />
-                            </label>
-                        </form>
-                    </details>
-                </div>
+            </form>
+        </main>
+        <div class="w-4/5 mx-auto" style="flex: 1 0 auto;">
+            <div class="border-b border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-400">
+                    <li class="me-2">
+                        <button class="tab-button active inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg hover:text-gray-300 group" data-target="activeCrawlers">
+                            <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z"/>
+                            </svg>Active Crawlers
+                        </a>
+                    </li>
+                    <li class="me-2">
+                        <button class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="crawlContent" aria-current="page">
+                            <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z"/>
+                            </svg>Recent URLs
+                        </a>
+                    </li>
+                    <li class="me-2">
+                        <button class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="fileCollectionTab" aria-current="page">
+                            <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M2 6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H9.586A2 2 0 0 1 8 5.586L6.414 4H2zm2-2a2 2 0 0 0-2 2v1h16V6a2 2 0 0 0-2-2H9.586A2 2 0 0 1 8 3.586L6.414 2H4z" clip-rule="evenodd" />
+                            </svg>File Collection
+                        </button>
+                    </li>
+                    <li class="me-2">
+                        <button hx-post="/gen-network" hx-target="#networkContent" class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="networkTab">
+                            <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M5 11.424V1a1 1 0 1 0-2 0v10.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.228 3.228 0 0 0 0-6.152ZM19.25 14.5A3.243 3.243 0 0 0 17 11.424V1a1 1 0 0 0-2 0v10.424a3.227 3.227 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.243 3.243 0 0 0 2.25-3.076Zm-6-9A3.243 3.243 0 0 0 11 2.424V1a1 1 0 0 0-2 0v1.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0V8.576A3.243 3.243 0 0 0 13.25 5.5Z"/>
+                            </svg>Network Graph
+                        </a>
+                    </li>
+                </ul>
             </div>
-        </form>
-    </main>
-
-    <div class="w-4/5 mx-auto">
-        <div class="border-b border-gray-700">
-            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-400">
-                <li class="me-2">
-                    <button class="tab-button active inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg hover:text-gray-300 group" data-target="activeCrawlers">
-                        <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z"/>
-                        </svg>Active Crawlers
-                    </a>
-                </li>
-                <li class="me-2">
-                    <button class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="crawlContent" aria-current="page">
-                        <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z"/>
-                        </svg>Recent URLs
-                    </a>
-                </li>
-                <li class="me-2">
-                    <button hx-post="/gen-network" hx-target="#networkContent" class="tab-button inline-flex items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 group" data-target="networkTab">
-                        <svg class="w-4 h-4 mr-2 text-gray-500 group-hover:text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M5 11.424V1a1 1 0 1 0-2 0v10.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.228 3.228 0 0 0 0-6.152ZM19.25 14.5A3.243 3.243 0 0 0 17 11.424V1a1 1 0 0 0-2 0v10.424a3.227 3.227 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.243 3.243 0 0 0 2.25-3.076Zm-6-9A3.243 3.243 0 0 0 11 2.424V1a1 1 0 0 0-2 0v1.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0V8.576A3.243 3.243 0 0 0 13.25 5.5Z"/>
-                        </svg>Network Graph
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div class="relative mt-4 px-4 max-w-4xl mx-auto">
-            <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="tab-content overflow-auto">
-                <h4 class="text-xl font-bold mb-4">Active Crawlers</h4>
-                <table class="w-full text-sm text-left rtl:text-right text-gray-400">
-                    <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+            <div class="relative mt-4 px-4 max-w-4xl mx-auto">
+                <div id="activeCrawlers" hx-get="/active-crawlers" hx-trigger="every 5s" class="tab-content overflow-auto">
+                    <h4 class="text-xl font-bold mb-4">Active Crawlers</h4>
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+                        <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+                            <tr>
+                                <th class="py-4 px-6">URL</th>
+                                <th class="py-4 px-6">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div id="crawlContent" hx-get="/recent-urls" hx-trigger="every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;">
+                    <h4 class="text-xl font-bold mb-4">Recent URLs</h4>
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+                        <thead class="text-xs uppercase bg-gray-700 text-gray-400">
                         <tr>
-                            <th class="py-4 px-6">URL</th>
-                            <th class="py-4 px-6">Action</th>
+                            <th class="py-2 px-6">ID</th>
+                            <th class="py-2 px-6">URL</th>
+                            <th class="py-2 px-6">Referrer</th>
+                            <th class="py-2 px-6">Last Visited At</th>
+                            <th class="py-2 px-6">Is Complete</th>
+                            <th class="py-2 px-6">Is Blocked</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        
-                    </tbody>
-                </table>
-            </div>
-            <div id="crawlContent" hx-get="/recent-urls" hx-trigger="every 10s" class="hidden tab-content overflow-auto" style="max-height: 30rem;">
-                <h4 class="text-xl font-bold mb-4">Recent URLs</h4>
-                <table class="w-full text-sm text-left rtl:text-right text-gray-400">
-                    <thead class="text-xs uppercase bg-gray-700 text-gray-400">
-                    <tr>
-                        <th class="py-2 px-6">ID</th>
-                        <th class="py-2 px-6">URL</th>
-                        <th class="py-2 px-6">Referrer</th>
-                        <th class="py-2 px-6">Last Visited At</th>
-                        <th class="py-2 px-6">Is Complete</th>
-                        <th class="py-2 px-6">Is Blocked</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-            <div id="networkTab" class="hidden tab-content overflow-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="text-xl font-bold">Network Graph</h4>
+                        </thead>
+                    </table>
                 </div>
-                <div id="networkContent"></div>
+                <form id="fileCollectionTab" hx-post="/file-collection" hx-trigger="every 10s" hx-include="fileTypeRadio" class="hidden tab-content overflow-auto" style="max-height: 30rem; max-width: 60rem;">
+                    <h4 class="text-xl font-bold mb-4">File Collection</h4>
+                    <div class="flex items-center mb-4 fileTypeRadio">
+                        <label class="inline-flex items-center">
+                            <input id="htmlRadio" type="radio" class="form-radio" name="fileType" value="HTML" checked>
+                            <span class="ml-2">HTML</span>
+                        </label>
+                        <label class="inline-flex items-center ml-4">
+                            <input id="imageRadio" type="radio" class="form-radio" name="fileType" value="Image">
+                            <span class="ml-2">Images</span>
+                        </label>
+                    </div>
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-400">
+                        <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+                            <tr>
+                                <th class="p-2">File Name</th>
+                                <th class="p-2">File Type</th>
+                                <th class="p-2">File Size</th>
+                                <th class="p-2">File Date</th>
+                                <th class="p-2">File Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </form>            
+                <div id="networkTab" class="hidden tab-content overflow-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-xl font-bold">Network Graph</h4>
+                    </div>
+                    <div id="networkContent"></div>
+                </div>
             </div>
         </div>
-    </div>
+    </body>
+    <footer class="bg-gray-800 p-4 text-center" style="margin-top: 10px; margin-bottom: 1px; flex-shrink: 0;">
+        <p class="text-gray-400 text-sm"> <a href="https://github.com/ztkent">Ztkent &copy; 2024</a></p>
+    </footer>
 </html>
 
 <script>

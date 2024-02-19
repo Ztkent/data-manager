@@ -34,6 +34,7 @@ type MasterDatabase interface {
 type ManagerDatabase interface {
 	GetRecentVisited() ([]Visited, error)
 	ExportToCSV(path string, table string) (string, error)
+	GetFilesForType(fileType string) (FileCollection, error)
 }
 
 func NewManagerDatabase(db *sql.DB) ManagerDatabase {
@@ -51,6 +52,19 @@ type Visited struct {
 	LastVisitedAt time.Time
 	IsComplete    bool
 	IsBlocked     bool
+}
+
+type File struct {
+	ID       int
+	FileName string
+	FileType string
+	FileSize string
+	FileDate string
+}
+
+type FileCollection struct {
+	FileType string
+	Files    []File
 }
 
 func (db *database) CreateUser(userID, email, password string) error {
@@ -160,6 +174,7 @@ func (db *database) GetRecentVisited() ([]Visited, error) {
 
 	return visiteds, nil
 }
+
 func (db *database) ExportToCSV(path string, table string) (string, error) {
 	if db.db == nil {
 		return "", fmt.Errorf("database is nil")
@@ -219,6 +234,71 @@ func (db *database) ExportToCSV(path string, table string) (string, error) {
 	}
 
 	return filePath, nil
+}
+
+func (db *database) GetFilesForType(fileType string) (FileCollection, error) {
+	if db.db == nil {
+		return FileCollection{}, fmt.Errorf("database is nil")
+	}
+
+	var query string
+	switch fileType {
+	case "HTML":
+		query = "SELECT id, url, html, updated_at FROM html ORDER BY updated_at DESC LIMIT 50"
+	case "Image":
+		query = "SELECT id, referrer, url, image, name, updated_at FROM images WHERE success = 1 AND image IS NOT NULL ORDER BY updated_at DESC LIMIT 50"
+	default:
+		return FileCollection{}, fmt.Errorf(fmt.Sprintf("invalid file type: %s", fileType))
+	}
+
+	rows, err := db.db.Query(query)
+	if err != nil {
+		return FileCollection{}, fmt.Errorf("could not query sqlite: %v", err)
+	}
+	defer rows.Close()
+	var files []File
+	for rows.Next() {
+		var f File
+		if fileType == "HTML" {
+			var id int
+			var url string
+			var html string
+			var updatedAt time.Time
+			if err := rows.Scan(&id, &url, &html, &updatedAt); err != nil {
+				return FileCollection{}, fmt.Errorf("could not scan sqlite: %v", err)
+			}
+			f.ID = id
+			f.FileName = url
+			f.FileType = "HTML"
+			f.FileSize = fmt.Sprintf("%d", len(html))
+			f.FileDate = updatedAt.Format("2006-01-02 15:04:05")
+		} else {
+			var id int
+			var referrer string
+			var url string
+			var image string
+			var name string
+			var updatedAt time.Time
+
+			if err := rows.Scan(&id, &referrer, &url, &image, &name, &updatedAt); err != nil {
+				return FileCollection{}, fmt.Errorf("could not scan sqlite: %v", err)
+			}
+			f.ID = id
+			f.FileName = url
+			f.FileType = "Image"
+			f.FileSize = fmt.Sprintf("%d", len(image))
+			f.FileDate = updatedAt.Format("2006-01-02 15:04:05")
+		}
+		files = append(files, f)
+	}
+	if err := rows.Err(); err != nil {
+		return FileCollection{}, fmt.Errorf("could not iterate sqlite: %v", err)
+	}
+
+	return FileCollection{
+		FileType: fileType,
+		Files:    files,
+	}, nil
 }
 
 func (db *database) GetRecentlyActiveUsers() ([]string, error) {

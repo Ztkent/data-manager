@@ -668,6 +668,44 @@ func (m *CrawlMaster) RecentURLsHandler() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlMaster) FileCollectionHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		crawlManager, err := m.GetCrawlManagerForRequest(r)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Get the recent file collection for the user
+		fileType := r.FormValue("fileType")
+		fc, err := crawlManager.SqliteDB.GetFilesForType(fileType)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Render the file_collection template, which displays the file collection
+		tmpl, err := template.ParseFiles("internal/html/templates/file_collection.gohtml")
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, fc)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
 func (m *CrawlMaster) HandleFinishedCrawlers() {
 	for {
 		time.Sleep(1 * time.Second)

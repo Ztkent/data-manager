@@ -1,0 +1,45 @@
+<style>
+    .filename {
+        max-width: 50ch; /* Adjust as needed */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+<h4 class="text-xl font-bold mb-4">File Collection</h4>
+<div class="flex items-center mb-4 fileTypeRadio">
+    <label class="inline-flex items-center">
+        <input id="htmlRadio" type="radio" class="form-radio" name="fileType" value="HTML" {{if eq .FileType "HTML"}}checked{{end}}>
+        <span class="ml-2">HTML</span>
+    </label>
+    <label class="inline-flex items-center ml-4">
+        <input id="imageRadio" type="radio" class="form-radio" name="fileType" value="Image" {{if eq .FileType "Image"}}checked{{end}}>
+        <span class="ml-2">Images</span>
+    </label>
+</div>
+
+<table class="w-full text-sm text-left rtl:text-right text-gray-400">
+    Recent {{.FileType}} Data
+    <thead class="text-xs uppercase bg-gray-700 text-gray-400">
+        <tr>
+            <th class="p-2">File Name</th>
+            <th class="p-2">File Type</th>
+            <th class="p-2">File Size</th>
+            <th class="p-2">File Date</th>
+            <th class="p-2">File Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Files}}
+        <tr>
+            <td class="p-2 filename">{{.FileName}}</td>
+            <td class="p-2">{{.FileType}}</td>
+            <td class="p-2">{{.FileSize}}</td>
+            <td class="p-2">{{.FileDate}}</td>
+            <td class="p-2">
+                <a href="/download?type={{.FileType}}&file={{.ID}}" class="text-blue-500">Download</a>
+            </td>
+        </tr>
+        {{end}}
+</table>

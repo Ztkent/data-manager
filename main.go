@@ -27,10 +27,10 @@ func main() {
 	}
 	fmt.Println("Successfully connected to Redis")
 
-	// Connect Master PG
+	// Connect PG
 	pgDB, err := db.ConnectPostgres()
 	if err != nil {
-		log.Fatal("Failed to Connect to Master PG: " + err.Error())
+		log.Fatal("Failed to Connect to PG: " + err.Error())
 	}
 	fmt.Println("Successfully connected to PG")
 
@@ -71,29 +71,34 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	))
 
 	// Auth
-	r.Post("/ensure-uuid", crawlMaster.EnsureUUIDHandler())
-	r.Post("/login", crawlMaster.Login())
-	r.Post("/logout", crawlMaster.Logout())
-	r.Post("/submit-register", crawlMaster.SubmitRegister())
-	r.Post("/submit-login", crawlMaster.SubmitLogin())
-	r.Post("/confirm-login", crawlMaster.ConfirmLoginAttempt(true))
-	r.Post("/validate-login", crawlMaster.ValidateLogin())
+	r.Post("/ensure-uuid", crawlMaster.EnsureUUIDHandler())         // Make sure every active user is assigned a UUID
+	r.Post("/login", crawlMaster.Login())                           // Login Modal
+	r.Post("/logout", crawlMaster.Logout())                         // Logout Modal
+	r.Post("/submit-register", crawlMaster.SubmitRegister())        // Submit Registration attempt
+	r.Post("/submit-login", crawlMaster.SubmitLogin())              // Submit Login attempt
+	r.Post("/confirm-login", crawlMaster.ConfirmLoginAttempt(true)) // Confirm Login attempt
+	r.Post("/validate-login", crawlMaster.ValidateLogin())          // Validate if active user is logged in
 
-	// Service
-	r.Get("/", crawlMaster.ServeHome())
-	r.Get("/tc", crawlMaster.ServeTC())
-	r.Get("/network", crawlMaster.ServeNetwork())
-	r.Post("/gen-network", crawlMaster.GenNetwork())
-	r.Post("/crawl", crawlMaster.CrawlHandler())
-	r.Post("/crawl-random", crawlMaster.CrawlRandomHandler())
-	r.Post("/kill-all-crawlers", crawlMaster.KillAllCrawlersHandler())
-	r.Post("/kill-crawler", crawlMaster.KillCrawlerHandler())
-	r.Get("/active-crawlers", crawlMaster.ActiveCrawlersHandler())
-	r.Get("/recent-urls", crawlMaster.RecentURLsHandler())
-	r.Post("/export-modal", crawlMaster.ExportModal())
-	r.Get("/export", crawlMaster.ExportDB())
-	r.Get("/dismiss-toast", crawlMaster.DismissToastHandler())
-	r.Post("/about-modal", crawlMaster.AboutModalHandler())
+	// Static
+	r.Get("/", crawlMaster.ServeHome())                        // Homepage
+	r.Get("/tc", crawlMaster.ServeTC())                        // Terms and Conditions
+	r.Get("/dismiss-toast", crawlMaster.DismissToastHandler()) // Dismiss any toast messages
+	r.Post("/about-modal", crawlMaster.AboutModalHandler())    // About Modal
+	r.Post("/export-modal", crawlMaster.ExportModal())         // Data Export Modal
+
+	// Network
+	r.Post("/gen-network", crawlMaster.GenNetwork()) // Regularly regenerate network graph
+	r.Get("/network", crawlMaster.ServeNetwork())    // Serve network graph
+	// Crawl
+	r.Post("/crawl", crawlMaster.CrawlHandler())                       // Crawl a specific URL
+	r.Post("/crawl-random", crawlMaster.CrawlRandomHandler())          // Crawl a random URL from the test-sites list
+	r.Post("/kill-crawler", crawlMaster.KillCrawlerHandler())          // Kill a specific crawler
+	r.Post("/kill-all-crawlers", crawlMaster.KillAllCrawlersHandler()) // Kill all crawlers for this user
+	// Data
+	r.Get("/active-crawlers", crawlMaster.ActiveCrawlersHandler())  // Get all active crawlers for this user
+	r.Get("/recent-urls", crawlMaster.RecentURLsHandler())          // Get some recent URLs for this user
+	r.Post("/file-collection", crawlMaster.FileCollectionHandler()) // Get some recent files for this user
+	r.Get("/export", crawlMaster.ExportDB())                        // Handle data export requests
 
 	// Serve static files
 	workDir, _ := os.Getwd()
