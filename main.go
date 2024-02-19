@@ -99,6 +99,7 @@ func defineRoutes(r *chi.Mux, crawlMaster *routes.CrawlMaster) {
 	r.Get("/recent-urls", crawlMaster.RecentURLsHandler())          // Get some recent URLs for this user
 	r.Post("/file-collection", crawlMaster.FileCollectionHandler()) // Get some recent files for this user
 	r.Get("/export", crawlMaster.ExportDB())                        // Handle data export requests
+	r.Get("/download", crawlMaster.Download())                      // Download the requested user files
 
 	// Serve static files
 	workDir, _ := os.Getwd()

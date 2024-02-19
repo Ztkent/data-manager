@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -370,6 +372,51 @@ func (m *CrawlMaster) GenNetwork() http.HandlerFunc {
 	}
 }
 
+func (m *CrawlMaster) Download() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		fileType := r.URL.Query().Get("type")
+		idStr := r.URL.Query().Get("file")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, "Failed to parse file id", http.StatusBadRequest)
+			return
+		}
+		if fileType == "" || idStr == "" {
+			http.Error(w, "Missing file type or id", http.StatusBadRequest)
+			return
+		}
+
+		err = checkIfUserLoggedIn(r, w, m)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		crawlManager, err := m.GetCrawlManagerForRequest(r)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		dataPath, err := crawlManager.SqliteDB.DownloadFile(fileType, id)
+		if err != nil {
+			log.Default().Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		// Set the extention and download file name
+		fileName := fmt.Sprintf("%s_%d.html", fileType, id)
+		if fileType == "Image" {
+			ext := filepath.Ext(name)
+			fileName = fmt.Sprintf("%s_%d%s", fileType, id, ext)
+		}
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+		w.Header().Set("Content-Type", "application/octet-stream")
+		http.ServeFile(w, r, dataPath)
+	}
+}
+
 func (m *CrawlMaster) ExportDB() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := checkIfUserLoggedIn(r, w, m)
@@ -667,7 +714,6 @@ func (m *CrawlMaster) RecentURLsHandler() http.HandlerFunc {
 		}
 	}
 }
-
 func (m *CrawlMaster) FileCollectionHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := checkIfUserLoggedIn(r, w, m)

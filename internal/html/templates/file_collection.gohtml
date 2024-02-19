@@ -38,7 +38,7 @@
             <td class="p-2">{{.FileSize}}</td>
             <td class="p-2">{{.FileDate}}</td>
             <td class="p-2">
-                <a href="/download?type={{.FileType}}&file={{.ID}}" class="text-blue-500">Download</a>
+                <a href="/download?name={{.FileName}}&type={{.FileType}}&file={{.ID}}" class="text-blue-500">Download</a>
             </td>
         </tr>
         {{end}}

@@ -35,6 +35,7 @@ type ManagerDatabase interface {
 	GetRecentVisited() ([]Visited, error)
 	ExportToCSV(path string, table string) (string, error)
 	GetFilesForType(fileType string) (FileCollection, error)
+	DownloadFile(fileType string, id int) (string, error)
 }
 
 func NewManagerDatabase(db *sql.DB) ManagerDatabase {
@@ -233,6 +234,50 @@ func (db *database) ExportToCSV(path string, table string) (string, error) {
 		file.WriteString("\n")
 	}
 
+	return filePath, nil
+}
+
+func (db *database) DownloadFile(fileType string, id int) (string, error) {
+	if db.db == nil {
+		return "", fmt.Errorf("database is nil")
+	}
+	filePath := filepath.Join("user/output/", "test")
+	if fileType == "HTML" {
+		var url string
+		var html string
+		row := db.db.QueryRow("SELECT url, html FROM html WHERE id = $1", id)
+		err := row.Scan(&url, &html)
+		if err != nil {
+			return "", fmt.Errorf("could not query sqlite: %v", err)
+		}
+		file, err := os.Create(filePath)
+		if err != nil {
+			return "", fmt.Errorf("could not create file: %v", err)
+		}
+		defer file.Close()
+		_, err = file.WriteString(html)
+		if err != nil {
+			return "", fmt.Errorf("could not write to file: %v", err)
+		}
+	} else {
+		var url string
+		var image string
+		var name string
+		row := db.db.QueryRow("SELECT url, image, name FROM images WHERE id = $1", id)
+		err := row.Scan(&url, &image, &name)
+		if err != nil {
+			return "", fmt.Errorf("could not query sqlite: %v", err)
+		}
+		file, err := os.Create(filePath)
+		if err != nil {
+			return "", fmt.Errorf("could not create file: %v", err)
+		}
+		defer file.Close()
+		_, err = file.WriteString(image)
+		if err != nil {
+			return "", fmt.Errorf("could not write to file: %v", err)
+		}
+	}
 	return filePath, nil
 }
 
