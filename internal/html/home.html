@@ -56,7 +56,7 @@
                     </div>
                     <div class="grid grid-cols-3 gap-4 ml-2">
                         <button hx-post="/crawl-random" hx-target="#crawlStatus" hx-include="#crawlOptions" hx-indicator="#spinner" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Crawl Random</button>
-                        <div id="exportButton" hx-post="/export-modal" hx-target="#exportModal" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300"> Export Data</div>
+                        <button id="exportButton" hx-post="/export-modal" hx-target="#exportModal" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300"> Export Data</button>
                         <button hx-post="/kill-all-crawlers" hx-indicator="#spinner" hx-target="#crawlStatus" class="w-40 bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center text-gray-300">Stop All Crawling</button>
                     </div>
                     <div id="crawlStatus">
