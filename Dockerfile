@@ -22,6 +22,10 @@ WORKDIR /app/data-crawler
 RUN cargo build --release
 WORKDIR /app
 
+# Install Python dependencies
+COPY pkg/data-processor/requirements.txt ./
+RUN pip3 install -r requirements.txt --break-system-packages
+
 # Copy go mod and sum files
 COPY go.mod go.sum ./
 
@@ -33,9 +37,6 @@ COPY . .
 
 # Move the binary where we need it
 RUN cp /app/data-crawler/target/release/data-crawler /app/pkg/data-crawler/
-
-# Install Python dependencies
-RUN pip3 install -r /app/pkg/data-processor/requirements.txt --break-system-packages
 
 # Build the Go app
 RUN go build -o main .
