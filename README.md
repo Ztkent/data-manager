@@ -1,6 +1,8 @@
 # Data Manager
 Data Manager is a powerful tool designed to simplify the process of data collection and processing.  
-It offers a convenient way to quickly crawl and collect recent web data, making it an useful tool for data modeling and research.
+It offers a convenient way to quickly crawl and collect recent web data, making it an useful tool for data modeling and research.  
+  
+Try it here: [Data Manager](https://data-manager.ztkent.com)
 
 ## Features
 - **Crawl:** Manage web crawling tasks to gather live data from online resources. This allows you to automate the data collection process, saving time and effort.
