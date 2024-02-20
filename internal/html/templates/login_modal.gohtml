@@ -23,6 +23,9 @@
                         <input type="password" id="password" name="password" class="shadow-sm border block w-full p-2.5 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500 shadow-sm-light" required>
                     </div>
                     <button hx-post="/submit-login" hx-target="#loginModal" class="bg-gray-500 opacity-75 hover:opacity-100 font-medium rounded text-sm px-5 py-2.5 text-center">Login</button>
+                    {{if .}} 
+                    <div class="text-red-500 text-sm mt-2">{{.}}</div>
+                    {{end}}
                 </form>
             </div>
             <div class="rounded-lg shadow m-4 bg-gray-800">

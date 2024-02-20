@@ -209,22 +209,18 @@ func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 		valid := validateEmail(email)
 		if !valid {
 			log.Default().Println("Invalid email")
-			http.Error(w, "Invalid email", http.StatusBadRequest)
-			// TODO: return the login modal with the error message
+			loginModalError(w, "Invalid email")
 			return
 		}
 		validPass, reason := validatePassword(pass, pass)
 		if !validPass {
 			log.Default().Println("Invalid password: ", reason)
-			http.Error(w, reason, http.StatusBadRequest)
-			// TODO: return the login modal with the error message
-			return
+			loginModalError(w, "Invalid password: "+reason)
 		}
 		userId, token, err := m.DB.LoginUser(email, pass)
 		if err != nil {
 			log.Default().Println(err)
-			http.Error(w, "Login Failed", http.StatusInternalServerError)
-			// TODO: return the login modal with the error message
+			loginModalError(w, "Login Failed")
 			return
 		}
 
@@ -251,6 +247,21 @@ func (m *CrawlMaster) SubmitLogin() http.HandlerFunc {
 	}
 }
 
+func loginModalError(w http.ResponseWriter, message string) {
+	tmpl, err := template.ParseFiles("internal/html/templates/login_modal.gohtml")
+	if err != nil {
+		log.Default().Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.Execute(w, message)
+	if err != nil {
+		log.Default().Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	return
+}
+
 func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
@@ -260,14 +271,12 @@ func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
 		// Validate the email and password
 		valid := validateEmail(email)
 		if !valid {
-			http.Error(w, "Invalid email", http.StatusBadRequest)
-			// TODO: return the login modal with the error message
+			log.Default().Println("Invalid Email")
 			return
 		}
 		validPass, reason := validatePassword(pass, repeatPass)
 		if !validPass {
-			http.Error(w, reason, http.StatusBadRequest)
-			// TODO: return the login modal with the error message
+			log.Default().Println("Invalid password: ", reason)
 			return
 		}
 
@@ -282,7 +291,6 @@ func (m *CrawlMaster) SubmitRegister() http.HandlerFunc {
 		if err != nil {
 			log.Default().Println(err)
 			http.Error(w, "Failed to create user", http.StatusInternalServerError)
-			// TODO: return the login modal with the error message
 			return
 		}
 
